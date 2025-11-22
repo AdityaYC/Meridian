@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, RefreshCw, ExternalLink, CreditCard, Trash2 } from 'lucide-react';
+import { RefreshCw, ExternalLink, CreditCard, Trash2 } from 'lucide-react';
 import { tellerAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import TellerConnectButton from '../../components/teller/TellerConnect';
 
 const AccountsPage: React.FC = () => {
     const [accounts, setAccounts] = useState<any[]>([]);
@@ -25,13 +26,20 @@ const AccountsPage: React.FC = () => {
         }
     };
 
-    const handleConnectAccount = async () => {
+    const handleTellerSuccess = async (accessToken: string, enrollment: any) => {
         try {
-            const { data } = await tellerAPI.getConnectUrl();
-            window.open(data.connectUrl, '_blank', 'width=500,height=700');
-            toast.success('Follow the prompts to connect your account');
+            // Save enrollment to backend
+            await tellerAPI.saveEnrollment({
+                accessToken,
+                enrollmentId: enrollment.id,
+                institutionName: enrollment.institution.name,
+            });
+
+            toast.success('Bank account connected successfully!');
+            loadAccounts();
         } catch (error) {
-            toast.error('Failed to initiate connection');
+            console.error('Save enrollment error:', error);
+            toast.error('Failed to save bank connection');
         }
     };
 
@@ -57,10 +65,7 @@ const AccountsPage: React.FC = () => {
                     <h1 className="heading-2">Accounts</h1>
                     <p className="text-gray-600 mt-1">Manage your connected bank accounts</p>
                 </div>
-                <button onClick={handleConnectAccount} className="btn-primary inline-flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    Connect Account
-                </button>
+                <TellerConnectButton onSuccess={handleTellerSuccess} />
             </div>
 
             <div className="card p-6 bg-gradient-to-br from-primary-500 to-primary-700 text-white">
@@ -89,10 +94,7 @@ const AccountsPage: React.FC = () => {
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No accounts connected</h3>
                     <p className="text-gray-600 mb-6">Connect your first bank account to start tracking your finances</p>
-                    <button onClick={handleConnectAccount} className="btn-primary inline-flex items-center gap-2">
-                        <Plus className="w-5 h-5" />
-                        Connect Account
-                    </button>
+                    <TellerConnectButton onSuccess={handleTellerSuccess} />
                 </div>
             ) : (
                 <div className="space-y-4">

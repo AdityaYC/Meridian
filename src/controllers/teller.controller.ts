@@ -10,7 +10,7 @@ export const getConnectUrl = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
     const { connectUrl, enrollmentId } = await tellerService.generateConnectUrl(userId);
-    
+
     res.json({ connectUrl, enrollmentId });
   } catch (error) {
     console.error('Connect URL error:', error);
@@ -46,6 +46,42 @@ export const handleConnection = async (req: Request, res: Response) => {
   }
 };
 
+export const saveEnrollment = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const { accessToken, enrollmentId, institutionName } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({ error: 'Access token required' });
+    }
+
+    // Save enrollment to DB (if you have a table for it, otherwise just sync accounts)
+    // The prompt suggested a teller_enrollments table, but existing schema uses BankAccount to store tokens.
+    // We will proceed with syncing accounts directly using the token.
+
+    const accounts = await tellerService.getAccounts(accessToken);
+
+    const syncedAccounts = [];
+    for (const account of accounts) {
+      // syncAccount updates/creates the BankAccount record with the token
+      const synced = await tellerService.syncAccount(userId, accessToken, account.id);
+      syncedAccounts.push(synced);
+
+      // Initial transaction sync
+      await tellerService.syncTransactions(userId, synced.id, accessToken, account.id);
+    }
+
+    res.json({
+      success: true,
+      message: 'Enrollment saved and accounts synced',
+      accounts: syncedAccounts,
+    });
+  } catch (error) {
+    console.error('Save enrollment error:', error);
+    res.status(500).json({ error: 'Failed to save enrollment' });
+  }
+};
+
 export const syncAccount = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
@@ -74,7 +110,7 @@ export const syncAccount = async (req: Request, res: Response) => {
     for (const txn of transactions) {
       if (!txn.category) {
         const aiResult = await categorizeTransaction(txn.description, txn.amount);
-        
+
         const updated = await prisma.transaction.update({
           where: { id: txn.id },
           data: {
@@ -92,7 +128,7 @@ export const syncAccount = async (req: Request, res: Response) => {
         });
 
         await checkForFraud(updated, io);
-        
+
         if (txn.type === 'debit' && aiResult.category) {
           await checkBudgetLimit(userId, aiResult.category, Math.abs(txn.amount), io);
         }
@@ -144,7 +180,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
       case 'transaction.created':
         console.log('New transaction webhook');
         break;
-      
+
       case 'account.balance_changed':
         console.log('Balance changed webhook');
         break;

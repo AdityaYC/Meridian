@@ -6,10 +6,11 @@ import {
     CreditCard,
     ArrowUpRight,
     ArrowDownRight,
-    Plus,
 } from 'lucide-react';
 import { tellerAPI, transactionAPI, analyticsAPI } from '../../lib/api';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import TellerConnectButton from '../../components/teller/TellerConnect';
+import toast from 'react-hot-toast';
 
 const DashboardPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
@@ -60,6 +61,23 @@ const DashboardPage: React.FC = () => {
         }
     };
 
+    const handleTellerSuccess = async (accessToken: string, enrollment: any) => {
+        try {
+            // Save enrollment to backend
+            await tellerAPI.saveEnrollment({
+                accessToken,
+                enrollmentId: enrollment.id,
+                institutionName: enrollment.institution.name,
+            });
+
+            toast.success('Bank account connected successfully!');
+            loadDashboardData(); // Reload dashboard data
+        } catch (error) {
+            console.error('Save enrollment error:', error);
+            toast.error('Failed to save bank connection');
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-96">
@@ -76,10 +94,7 @@ const DashboardPage: React.FC = () => {
                     <h1 className="heading-2">Dashboard</h1>
                     <p className="text-gray-600 mt-1">Welcome back! Here's your financial overview.</p>
                 </div>
-                <button className="btn-primary inline-flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    Connect Account
-                </button>
+                <TellerConnectButton onSuccess={handleTellerSuccess} />
             </div>
 
             {/* Stats Grid */}

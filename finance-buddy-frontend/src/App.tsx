@@ -9,9 +9,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import TransactionsPage from './pages/dashboard/TransactionsPage';
-import BudgetsPage from './pages/dashboard/BudgetsPage';
-import AnalyticsPage from './pages/dashboard/AnalyticsPage';
+import TestTellerPage from './pages/TestTellerPage';
+import FinancialOverviewPage from './pages/dashboard/FinancialOverviewPage';
 import AccountsPage from './pages/dashboard/AccountsPage';
 import BankerPage from './pages/dashboard/BankerPage';
 
@@ -29,6 +28,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/test-teller" element={<TestTellerPage />} />
 
         {/* Protected Routes */}
         <Route
@@ -40,9 +40,7 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
-          <Route path="transactions" element={<TransactionsPage />} />
-          <Route path="budgets" element={<BudgetsPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="overview" element={<FinancialOverviewPage />} />
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="banker" element={<BankerPage />} />
         </Route>

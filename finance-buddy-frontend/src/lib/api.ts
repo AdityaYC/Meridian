@@ -42,12 +42,7 @@ export const authAPI = {
 };
 
 // Teller APIs
-export const tellerAPI = {
-    getConnectUrl: () => api.get('/teller/connect'),
-    connectAccount: (enrollmentId: string) => api.post('/teller/connect/callback', { enrollmentId }),
-    getAccounts: () => api.get('/teller/accounts'),
-    syncAccount: (accountId: string) => api.post(`/teller/accounts/${accountId}/sync`),
-};
+
 
 // Transaction APIs
 export const transactionAPI = {
@@ -80,4 +75,14 @@ export const budgetAPI = {
 export const analyticsAPI = {
     getSpending: (days?: number) => api.get('/analytics/spending', { params: { days } }),
     getTrends: (months?: number) => api.get('/analytics/trends', { params: { months } }),
+};
+
+// Teller APIs
+export const tellerAPI = {
+    saveEnrollment: (data: any) => api.post('/teller/enrollments', data),
+    getAccounts: () => api.get('/teller/accounts'),
+    getTransactions: (accountId: string, params?: any) =>
+        api.get(`/teller/accounts/${accountId}/transactions`, { params }),
+    syncAccount: (accountId: string) =>
+        api.post(`/teller/accounts/${accountId}/sync`),
 };
