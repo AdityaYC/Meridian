@@ -2,9 +2,37 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import OpenAI from 'openai';
 import axios from 'axios';
+import { synthesiaService } from '../services/synthesia.service';
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export const generateVideo = async (req: Request, res: Response) => {
+  try {
+    const { script } = req.body;
+    
+    if (!script) {
+      return res.status(400).json({ message: 'Script is required' });
+    }
+
+    const result = await synthesiaService.generateVideo(script);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Video generation error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getVideoStatus = async (req: Request, res: Response) => {
+  try {
+    const { videoId } = req.params;
+    const status = await synthesiaService.getVideoStatus(videoId);
+    res.json(status);
+  } catch (error: any) {
+    console.error('Status check error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 export const getBankerContext = async (req: Request, res: Response) => {
     try {
