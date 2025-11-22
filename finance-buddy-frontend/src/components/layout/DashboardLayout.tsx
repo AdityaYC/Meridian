@@ -3,8 +3,6 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     ArrowLeftRight,
-    PieChart,
-    TrendingUp,
     Settings,
     Bell,
     Search,
@@ -65,24 +63,10 @@ const DashboardLayout: React.FC = () => {
                         />
                         <NavItem
                             icon={<ArrowLeftRight className="w-5 h-5" />}
-                            label="Transactions"
-                            path="/dashboard/transactions"
-                            active={location.pathname === '/dashboard/transactions'}
-                            onClick={() => navigate('/dashboard/transactions')}
-                        />
-                        <NavItem
-                            icon={<PieChart className="w-5 h-5" />}
-                            label="Budgets"
-                            path="/dashboard/budgets"
-                            active={location.pathname === '/dashboard/budgets'}
-                            onClick={() => navigate('/dashboard/budgets')}
-                        />
-                        <NavItem
-                            icon={<TrendingUp className="w-5 h-5" />}
-                            label="Analytics"
-                            path="/dashboard/analytics"
-                            active={location.pathname === '/dashboard/analytics'}
-                            onClick={() => navigate('/dashboard/analytics')}
+                            label="Financial Overview"
+                            path="/dashboard/overview"
+                            active={location.pathname === '/dashboard/overview'}
+                            onClick={() => navigate('/dashboard/overview')}
                         />
                         <NavItem
                             icon={<Users className="w-5 h-5" />}
