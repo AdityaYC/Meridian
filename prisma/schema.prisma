@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phoneNumber   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  bankAccounts  BankAccount[]
+  transactions  Transaction[]
+  budgets       Budget[]
+  investments   Investment[]
+  chatHistory   ChatMessage[]
+  alerts        Alert[]
+}
+
+model BankAccount {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tellerAccessToken   String?  @unique
+  tellerEnrollmentId  String?  @unique
+  tellerAccountId     String   @unique
+  
+  institutionName     String
+  accountName         String
+  accountType         String
+  accountNumber       String?
+  routingNumber       String?
+  
+  available           Float    @default(0)
+  current             Float    @default(0)
+  limit               Float?
+  currency            String   @default("USD")
+  
+  status              String   @default("active")
+  lastSyncedAt        DateTime @default(now())
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  transactions        Transaction[]
+  
+  @@index([userId])
+  @@index([tellerAccountId])
+}
+
+model Transaction {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  bankAccountId       String
+  bankAccount         BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  
+  tellerTransactionId String   @unique
+  amount              Float
+  date                DateTime
+  description         String
+  merchantName        String?
+  
+  status              String
+  type                String
+  
+  category            String?
+  subcategory         String?
+  isRecurring         Boolean  @default(false)
+  isTaxDeductible     Boolean  @default(false)
+  confidence          Float?
+  
+  details             Json?
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@index([userId, date])
+  @@index([tellerTransactionId])
+  @@index([category])
+}
+
+model Budget {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  category        String
+  monthlyLimit    Float
+  currentSpent    Float    @default(0)
+  month           DateTime
+  alertThreshold  Float    @default(80)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, category, month])
+  @@index([userId, month])
+}
+
+model Investment {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  symbol          String
+  name            String
+  type            String
+  quantity        Float
+  purchasePrice   Float
+  currentPrice    Float
+  totalValue      Float
+  gainLoss        Float
+  gainLossPercent Float
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model Alert {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type            String
+  title           String
+  message         String
+  severity        String
+  isRead          Boolean  @default(false)
+  metadata        Json?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  role            String
+  content         String   @db.Text
+  audioUrl        String?
+  avatarVideoUrl  String?
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId, createdAt])
+}
