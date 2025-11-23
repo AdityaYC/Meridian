@@ -20,18 +20,28 @@ router.post('/financial-assistant', authMiddleware, async (req: Request, res: Re
         console.log('API Key status:', apiKey ? `Present (starts with ${apiKey.substring(0, 4)}...)` : 'Missing');
         console.log('Model:', "gemini-2.0-flash");
 
-        // Fetch user's financial data
+        // Fetch user's financial data with error handling
         console.log('Fetching user context...');
-        const [bankAccounts, transactions, budgets, investments] = await Promise.all([
-            prisma.bankAccount.findMany({ where: { userId }, take: 50 }),
-            prisma.transaction.findMany({
-                where: { userId },
-                orderBy: { date: 'desc' },
-                take: 100,
-            }),
-            prisma.budget.findMany({ where: { userId } }),
-            prisma.investment.findMany({ where: { userId } }),
-        ]);
+        let bankAccounts: any[] = [];
+        let transactions: any[] = [];
+        let budgets: any[] = [];
+        let investments: any[] = [];
+        
+        try {
+            [bankAccounts, transactions, budgets, investments] = await Promise.all([
+                prisma.bankAccount?.findMany({ where: { userId }, take: 50 }).catch(() => []),
+                prisma.transaction?.findMany({
+                    where: { userId },
+                    orderBy: { date: 'desc' },
+                    take: 100,
+                }).catch(() => []),
+                prisma.budget?.findMany({ where: { userId } }).catch(() => []),
+                prisma.investment?.findMany({ where: { userId } }).catch(() => []),
+            ]);
+        } catch (error) {
+            console.log('Error fetching user data, using empty arrays:', error);
+            // Use empty arrays if tables don't exist
+        }
 
         // Calculate financial summary
         const totalBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (acc.current || 0), 0);
