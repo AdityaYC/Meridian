@@ -6,7 +6,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const router = Router();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Financial assistant chat endpoint
 router.post('/financial-assistant', authMiddleware, async (req: Request, res: Response) => {

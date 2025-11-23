@@ -95,7 +95,7 @@ router.get('/crypto/:symbol', authMiddleware, async (req: Request, res: Response
 // Save/update investment preferences
 router.post('/preferences/:category', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
     const { category } = req.params;
     const { riskTolerance, investmentAmount, timeHorizon, goals } = req.body;
 
@@ -134,7 +134,7 @@ router.post('/preferences/:category', authMiddleware, async (req: Request, res: 
 // Get user preferences
 router.get('/preferences', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
     const preferences = await prisma.investmentPreference.findMany({
       where: { userId }
     });
@@ -148,7 +148,7 @@ router.get('/preferences', authMiddleware, async (req: Request, res: Response) =
 // Get user's portfolio holdings
 router.get('/holdings', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.userId;
+        const userId = (req as any).userId;
 
         let holdings = await prisma.investment.findMany({
             where: { userId },
@@ -192,7 +192,7 @@ router.get('/holdings', authMiddleware, async (req: Request, res: Response) => {
 // Get portfolio summary
 router.get('/summary', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.userId;
+        const userId = (req as any).userId;
 
         const holdings = await prisma.investment.findMany({
             where: { userId },
@@ -219,7 +219,7 @@ router.get('/summary', authMiddleware, async (req: Request, res: Response) => {
 // Get AI portfolio analysis
 router.post('/analyze', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.userId;
+        const userId = (req as any).userId;
         const { riskTolerance, investmentGoal, timeHorizon, age } = req.body;
 
         const holdings = await prisma.investment.findMany({
@@ -297,7 +297,7 @@ router.get('/search', authMiddleware, async (req: Request, res: Response) => {
 // Place order (paper trading)
 router.post('/orders', authMiddleware, async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.userId;
+        const userId = (req as any).userId;
         const { symbol, shares, side } = req.body; // side: buy or sell
 
         // Place order with Alpaca
