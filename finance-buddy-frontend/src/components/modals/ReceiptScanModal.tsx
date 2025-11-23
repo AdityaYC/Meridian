@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload, Camera } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 import { api } from '../../lib/api';
 import toast from 'react-hot-toast';
 

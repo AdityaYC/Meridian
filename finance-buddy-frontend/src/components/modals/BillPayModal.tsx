@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Upload } from 'lucide-react';
 import { api } from '../../lib/api';
 import toast from 'react-hot-toast';

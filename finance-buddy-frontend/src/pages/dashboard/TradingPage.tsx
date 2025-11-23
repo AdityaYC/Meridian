@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, X, Clock, Search } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingCart, X, Clock, Search } from 'lucide-react';
 import { api } from '../../lib/api';
 import toast from 'react-hot-toast';
 
@@ -13,7 +13,7 @@ const TradingPage: React.FC = () => {
   const [marketData, setMarketData] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadMarketData();

@@ -6,7 +6,6 @@ import {
     Bell,
     Palette,
     Download,
-    Trash2,
     Globe,
     Bot,
     Shield,
@@ -18,8 +17,6 @@ import {
     Eye,
     EyeOff,
     Camera,
-    LogOut,
-    Smartphone,
     Mail,
     Save,
     AlertCircle,
@@ -30,7 +27,6 @@ import toast from 'react-hot-toast';
 type SettingsTab = 'profile' | 'security' | 'accounts' | 'notifications' | 'ai' | 'appearance' | 'privacy' | 'help';
 
 const SettingsPage: React.FC = () => {
-    const { user } = useAuthStore();
     const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
     const tabs = [

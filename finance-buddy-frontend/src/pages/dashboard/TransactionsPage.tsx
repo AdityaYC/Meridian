@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Filter, Download, Calendar } from 'lucide-react';
+import { Search, Download, Calendar } from 'lucide-react';
 import { transactionAPI } from '../../lib/api';
 import { format } from 'date-fns';
 

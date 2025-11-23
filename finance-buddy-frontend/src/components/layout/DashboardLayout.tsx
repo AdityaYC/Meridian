@@ -6,7 +6,6 @@ import {
     TrendingUp,
     Settings,
     Bell,
-    PieChart,
     Sparkles,
     LogOut,
     User,
@@ -98,14 +97,14 @@ const DashboardLayout: React.FC = () => {
                         />
                         <NavItem
                             icon={<Users className="w-5 h-5" />}
-                            label="Talk to Michael"
+                            label="Financial Advisor"
                             path="/dashboard/banker"
                             active={location.pathname === '/dashboard/banker'}
                             onClick={() => navigate('/dashboard/banker')}
                         />
                         <NavItem
                             icon={<Sparkles className="w-5 h-5" />}
-                            label="Meridian Features"
+                            label="Advanced Features"
                             path="/dashboard/meridian"
                             active={location.pathname === '/dashboard/meridian'}
                             onClick={() => navigate('/dashboard/meridian')}

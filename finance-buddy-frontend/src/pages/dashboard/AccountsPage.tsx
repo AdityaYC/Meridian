@@ -9,7 +9,6 @@ const AccountsPage: React.FC = () => {
     const [accounts, setAccounts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState<string | null>(null);
-    const [connecting, setConnecting] = useState(false);
     const [useDemo] = useState(true); // Use demo data
 
     useEffect(() => {

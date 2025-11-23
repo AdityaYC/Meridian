@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-  TrendingUp, DollarSign, Bell, Target, Calendar, Receipt, Shield, Zap, Sparkles,
-  FileText, CreditCard, PieChart as PieChartIcon, Award, TrendingDown, Clock,
-  AlertCircle, CheckCircle, ArrowRight,
+  TrendingUp, Bell, Target, Calendar, Receipt, Shield, Zap, Sparkles,
+  FileText, CreditCard, PieChart as PieChartIcon, Award,
+  AlertCircle, CheckCircle,
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { motion } from 'framer-motion';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import ReceiptScanModal from '../../components/modals/ReceiptScanModal';
@@ -122,7 +122,7 @@ const MeridianDashboard: React.FC = () => {
   );
 };
 
-const OverviewTab: React.FC<any> = ({ healthScore, cashFlow, notifications, bills, roadmap, budget, onOpenReceiptModal, onOpenBillModal, onOpenTaxModal }) => {
+const OverviewTab: React.FC<any> = ({ healthScore, cashFlow, notifications, bills, onOpenReceiptModal, onOpenBillModal, onOpenTaxModal }) => {
   const upcomingBills = bills.filter((b: any) => b.nextDueDate && new Date(b.nextDueDate) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
   const cashFlowData = cashFlow?.forecast?.slice(0, 14).map((cf: any) => ({ date: format(new Date(cf.date), 'MMM d'), balance: parseFloat(cf.balance) })) || [];
 
@@ -156,7 +156,7 @@ const OverviewTab: React.FC<any> = ({ healthScore, cashFlow, notifications, bill
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center gap-2 mb-4"><Bell className="w-5 h-5 text-blue-600" /><h3 className="font-semibold text-gray-900">Recent Notifications</h3></div>
             <div className="space-y-3">
-              {notifications.slice(0, 5).map(notif => (
+              {notifications.slice(0, 5).map((notif: any) => (
                 <div key={notif.id} className={`p-3 rounded-lg border ${notif.severity === 'critical' ? 'bg-red-50 border-red-200' : notif.severity === 'warning' ? 'bg-yellow-50 border-yellow-200' : 'bg-blue-50 border-blue-200'}`}>
                   <p className="font-medium text-sm text-gray-900">{notif.title}</p>
                   <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
@@ -170,7 +170,7 @@ const OverviewTab: React.FC<any> = ({ healthScore, cashFlow, notifications, bill
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex items-center gap-2 mb-4"><Calendar className="w-5 h-5 text-green-600" /><h3 className="font-semibold text-gray-900">Upcoming Bills</h3></div>
             <div className="space-y-3">
-              {upcomingBills.slice(0, 5).map(bill => {
+              {upcomingBills.slice(0, 5).map((bill: any) => {
                 const daysUntil = Math.ceil((new Date(bill.nextDueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                 return (
                   <div key={bill.id} className="p-3 bg-gray-50 rounded-lg border border-gray-200">

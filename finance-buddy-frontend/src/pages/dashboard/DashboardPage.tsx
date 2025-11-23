@@ -10,11 +10,10 @@ import {
 import { tellerAPI, transactionAPI, analyticsAPI } from '../../lib/api';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import TellerConnectButton from '../../components/teller/TellerConnect';
-import toast from 'react-hot-toast';
 
 const DashboardPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
-    const [useDemo, setUseDemo] = useState(true); // Toggle for demo data
+    const [useDemo] = useState(true); // Toggle for demo data
     const [stats, setStats] = useState({
         totalBalance: 0,
         monthlyIncome: 0,
@@ -54,15 +53,17 @@ const DashboardPage: React.FC = () => {
                     { category: 'Education', total: 650 },
                     { category: 'Transportation', total: 380 },
                     { category: 'Bills & Utilities', total: 220 },
-                    { category: 'Shopping', total: 180 },
-                    { category: 'Personal Care', total: 95 },
+                    { category: 'Shopping', total: 320 },
+                    { category: 'Personal Care', total: 110 },
                 ]);
                 
                 setTrendData([
-                    { month: '2025-08', amount: 1200 },
-                    { month: '2025-09', amount: 1450 },
-                    { month: '2025-10', amount: 1580 },
-                    { month: '2025-11', amount: 1679 },
+                    { month: '2025-06', amount: 1200 },
+                    { month: '2025-07', amount: 1350 },
+                    { month: '2025-08', amount: 1450 },
+                    { month: '2025-09', amount: 1530 },
+                    { month: '2025-10', amount: 1620 },
+                    { month: '2025-11', amount: 1680 },
                 ]);
                 
                 setStats({

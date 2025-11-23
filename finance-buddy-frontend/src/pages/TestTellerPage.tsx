@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-declare global {
-    interface Window {
-        TellerConnect: any;
-    }
-}
+// Teller Connect type declaration handled by library
 
 const TestTellerPage: React.FC = () => {
     const [logs, setLogs] = useState<string[]>([]);

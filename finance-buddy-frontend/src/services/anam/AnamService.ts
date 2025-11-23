@@ -4,7 +4,6 @@ export class AnamService {
   private client: any = null;
   private personaId: string;
   private apiKey: string;
-  private onMessageCallback: ((message: string) => void) | null = null;
   private onStatusCallback: ((status: string) => void) | null = null;
   private isStreaming: boolean = false;
 
@@ -25,7 +24,7 @@ export class AnamService {
 
       this.client = unsafe_createClientWithApiKey(this.apiKey, {
         personaId: this.personaId,
-      });
+      } as any);
 
       console.log('Anam client created');
       this.onStatusCallback?.('connecting');
@@ -70,8 +69,8 @@ export class AnamService {
     }
   }
 
-  onMessage(callback: (message: string) => void): void {
-    this.onMessageCallback = callback;
+  onMessage(_callback: (message: string) => void): void {
+    // Callback functionality to be implemented
   }
 
   onConnectionStatus(callback: (status: string) => void): void {
