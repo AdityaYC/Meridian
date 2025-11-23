@@ -58,12 +58,12 @@ const DashboardPage: React.FC = () => {
                 ]);
                 
                 setTrendData([
-                    { month: '2025-06', amount: 1200 },
-                    { month: '2025-07', amount: 1350 },
-                    { month: '2025-08', amount: 1450 },
-                    { month: '2025-09', amount: 1530 },
-                    { month: '2025-10', amount: 1620 },
-                    { month: '2025-11', amount: 1680 },
+                    { month: '2025-06', expenses: 1200 },
+                    { month: '2025-07', expenses: 1350 },
+                    { month: '2025-08', expenses: 1450 },
+                    { month: '2025-09', expenses: 1530 },
+                    { month: '2025-10', expenses: 1620 },
+                    { month: '2025-11', expenses: 1680 },
                 ]);
                 
                 setStats({
