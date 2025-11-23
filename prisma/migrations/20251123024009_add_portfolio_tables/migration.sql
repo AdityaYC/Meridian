@@ -10,7 +10,7 @@
 ALTER TABLE "AIRecommendation" DROP CONSTRAINT "AIRecommendation_userId_fkey";
 
 -- DropForeignKey
-ALTER TABLE "Watchlist" DROP CONSTRAINT "Watchlist_userId_fkey";
+-- ALTER TABLE "Watchlist" DROP CONSTRAINT "Watchlist_userId_fkey";
 
 -- DropIndex
 DROP INDEX "PortfolioTransaction_symbol_idx";
@@ -23,7 +23,7 @@ ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 DROP TABLE "AIRecommendation";
 
 -- DropTable
-DROP TABLE "Watchlist";
+-- DROP TABLE "Watchlist";
 
 -- CreateTable
 CREATE TABLE "AiRecommendation" (

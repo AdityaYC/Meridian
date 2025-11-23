@@ -3,12 +3,24 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-    // Find the first user (assuming you've already registered)
-    const user = await prisma.user.findFirst();
+    // Find the first user or create one
+    let user = await prisma.user.findFirst();
 
     if (!user) {
-        console.log('❌ No user found. Please register first.');
-        return;
+        console.log('⚠️ No user found. Creating default user...');
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = await bcrypt.hash('password123', 10);
+
+        user = await prisma.user.create({
+            data: {
+                email: 'demo@meridian.com',
+                passwordHash: hashedPassword,
+                firstName: 'Alex',
+                lastName: 'Rivera',
+                phoneNumber: '555-0123',
+            }
+        });
+        console.log('✅ Created default user: demo@meridian.com / password123');
     }
 
     console.log(`📝 Seeding data for user: ${user.email}`);

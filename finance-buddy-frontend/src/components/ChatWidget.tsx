@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader } from 'lucide-react';
+import { MessageCircle, X, Send, Loader, Activity } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -170,6 +170,21 @@ const ChatWidget: React.FC = () => {
 
                     {/* Input */}
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                        {/* Quick Actions */}
+                        <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+                            <button
+                                onClick={() => {
+                                    setInput("Please perform a comprehensive financial health check on my data. Analyze my spending trends, debt-to-asset ratio, emergency fund coverage, and investment diversification.");
+                                    // Optional: automatically send
+                                    // sendMessage(); 
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 text-xs font-medium rounded-full hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors whitespace-nowrap"
+                            >
+                                <Activity className="w-3.5 h-3.5" />
+                                Financial Health Check
+                            </button>
+                        </div>
+
                         <div className="flex gap-2">
                             <input
                                 type="text"

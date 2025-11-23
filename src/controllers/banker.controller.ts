@@ -256,6 +256,164 @@ export const chatWithMichael = async (req: Request, res: Response) => {
 
         const totalInvestments = investments.reduce((sum, inv) => sum + parseFloat(inv.totalValue.toString()), 0);
 
+        // --- NEW: Financial Health Metrics ---
+
+        // 1. Spending Trend (Month over Month)
+        const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+        const previousMonthTransactions = transactions.filter(t => t.date >= sixtyDaysAgo && t.date < thirtyDaysAgo);
+        const previousMonthExpenses = previousMonthTransactions
+            .filter(t => t.type === 'debit')
+            .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+        const spendingTrend = previousMonthExpenses > 0
+            ? ((monthlyExpenses - previousMonthExpenses) / previousMonthExpenses) * 100
+            : 0;
+
+        // 2. Emergency Fund Coverage
+        // Assuming monthly expenses is a good proxy for "necessary expenses"
+        const emergencyFundMonths = monthlyExpenses > 0 ? (savingsBalance / monthlyExpenses).toFixed(1) : 'N/A';
+
+        // 3. Debt-to-Asset Ratio
+        const totalAssets = totalBalance + totalInvestments;
+        const totalDebt = Math.abs(creditCardBalance); // Add loans here if available
+        const debtToAssetRatio = totalAssets > 0 ? ((totalDebt / totalAssets) * 100).toFixed(1) : '0';
+
+        // 4. Investment Sector Breakdown
+        const sectorMap: Record<string, number> = {};
+        investments.forEach(inv => {
+            if (inv.sector) {
+                sectorMap[inv.sector] = (sectorMap[inv.sector] || 0) + parseFloat(inv.totalValue.toString());
+            }
+        });
+        const sectorBreakdown = Object.entries(sectorMap)
+            .map(([sector, value]) => `- ${sector}: $${value.toFixed(2)} (${((value / totalInvestments) * 100).toFixed(1)}%)`)
+            .join('\n');
+
+        // 5. Budget Adherence Analysis
+        let budgetAdherence = 'No budgets set';
+        let overBudgetCategories: string[] = [];
+        let avgAdherence = 0;
+
+        if (budgets.length > 0) {
+            const adherenceScores = budgets.map(b => {
+                const spent = parseFloat(b.currentSpent.toString());
+                const limit = parseFloat(b.monthlyLimit.toString());
+                const adherence = (spent / limit) * 100;
+                if (adherence > 100) {
+                    overBudgetCategories.push(`${b.category} (${adherence.toFixed(0)}%)`);
+                }
+                return adherence;
+            });
+            avgAdherence = adherenceScores.reduce((sum, score) => sum + score, 0) / adherenceScores.length;
+            budgetAdherence = `${avgAdherence.toFixed(0)}% average adherence${overBudgetCategories.length > 0 ? `, ${overBudgetCategories.length} categories over budget` : ', all on track!'}`;
+        }
+
+        // 6. Subscription Detection
+        interface Subscription {
+            merchant: string;
+            amount: number;
+            frequency: number; // days between transactions
+        }
+
+        const subscriptions: Subscription[] = [];
+        const merchantTransactions: Record<string, any[]> = {};
+
+        // Group transactions by merchant name
+        transactions.forEach(t => {
+            if (t.type === 'debit' && t.merchantName) {
+                const merchant = t.merchantName.toLowerCase();
+                if (!merchantTransactions[merchant]) {
+                    merchantTransactions[merchant] = [];
+                }
+                merchantTransactions[merchant].push(t);
+            }
+        });
+
+        // Detect recurring patterns
+        Object.entries(merchantTransactions).forEach(([merchant, txns]) => {
+            if (txns.length >= 2) {
+                // Sort by date
+                const sorted = txns.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                // Calculate average interval and amount
+                const intervals: number[] = [];
+                const amounts: number[] = [];
+
+                for (let i = 1; i < sorted.length; i++) {
+                    const daysBetween = Math.abs(new Date(sorted[i].date).getTime() - new Date(sorted[i - 1].date).getTime()) / (1000 * 60 * 60 * 24);
+                    intervals.push(daysBetween);
+                    amounts.push(Math.abs(sorted[i].amount));
+                }
+
+                const avgInterval = intervals.reduce((sum, i) => sum + i, 0) / intervals.length;
+                const avgAmount = amounts.reduce((sum, a) => sum + a, 0) / amounts.length;
+                const amountVariance = Math.max(...amounts) - Math.min(...amounts);
+
+                // If interval is ~monthly (25-35 days) and amount is consistent (< 20% variance)
+                if (avgInterval >= 25 && avgInterval <= 35 && amountVariance < avgAmount * 0.2) {
+                    subscriptions.push({
+                        merchant: txns[0].merchantName || merchant,
+                        amount: avgAmount,
+                        frequency: Math.round(avgInterval)
+                    });
+                }
+            }
+        });
+
+        const totalSubscriptionCost = subscriptions.reduce((sum, s) => sum + s.amount, 0);
+        const subscriptionList = subscriptions.length > 0
+            ? subscriptions.map(s => `- ${s.merchant}: $${s.amount.toFixed(2)}/month`).join('\n')
+            : '- No recurring subscriptions detected';
+
+        // 7. Impulse Buy Detection
+        interface ImpulseBuy {
+            description: string;
+            amount: number;
+            category: string;
+            date: Date;
+            percentAboveAvg: number;
+        }
+
+        const impulseBuys: ImpulseBuy[] = [];
+
+        // Calculate average spending per category
+        const categoryAverages: Record<string, number> = {};
+        const categoryCounts: Record<string, number> = {};
+
+        recentTransactions.filter(t => t.type === 'debit').forEach(t => {
+            const cat = t.category || 'Uncategorized';
+            const amount = Math.abs(t.amount);
+            categoryAverages[cat] = (categoryAverages[cat] || 0) + amount;
+            categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+        });
+
+        Object.keys(categoryAverages).forEach(cat => {
+            categoryAverages[cat] = categoryAverages[cat] / categoryCounts[cat];
+        });
+
+        // Flag transactions > 2x category average
+        recentTransactions.filter(t => t.type === 'debit').forEach(t => {
+            const cat = t.category || 'Uncategorized';
+            const amount = Math.abs(t.amount);
+            const avg = categoryAverages[cat];
+
+            if (amount > avg * 2 && amount > 50) { // Only flag if > $50
+                impulseBuys.push({
+                    description: t.description,
+                    amount: amount,
+                    category: cat,
+                    date: t.date,
+                    percentAboveAvg: ((amount - avg) / avg) * 100
+                });
+            }
+        });
+
+        const totalImpulseSpending = impulseBuys.reduce((sum, ib) => sum + ib.amount, 0);
+        const impulseBuyList = impulseBuys.length > 0
+            ? impulseBuys.slice(0, 5).map(ib => `- ${ib.description}: $${ib.amount.toFixed(2)} (${ib.percentAboveAvg.toFixed(0)}% above avg)`).join('\n')
+            : '- No unusual spending detected';
+
+
         // Build Michael's personality context
         const systemPrompt = `You are Michael, a warm, helpful, and professional Certified Financial Planner (CFP®). You're speaking with ${user.firstName} ${user.lastName || ''}.
 
@@ -293,7 +451,30 @@ ${budgets.length > 0 ? budgets.map(b => {
             return `- ${b.category}: $${b.currentSpent.toFixed(2)} / $${b.monthlyLimit.toFixed(2)} (${progress.toFixed(0)}% used)`;
         }).join('\n') : '- No budgets set'}
 
-IMPORTANT: Always reference their specific numbers and patterns when giving advice.`;
+IMPORTANT: Always reference their specific numbers and patterns when giving advice.
+
+FINANCIAL HEALTH METRICS (Use these to provide deeper analysis):
+- Spending Trend (vs last month): ${spendingTrend > 0 ? '+' : ''}${spendingTrend.toFixed(1)}%
+- Emergency Fund Coverage: ${emergencyFundMonths} months of expenses
+- Debt-to-Asset Ratio: ${debtToAssetRatio}%
+- Budget Adherence: ${budgetAdherence}${overBudgetCategories.length > 0 ? ` (Over: ${overBudgetCategories.join(', ')})` : ''}
+
+RECURRING SUBSCRIPTIONS (Total: $${totalSubscriptionCost.toFixed(2)}/month):
+${subscriptionList}
+
+POTENTIAL IMPULSE BUYS (Total: $${totalImpulseSpending.toFixed(2)} this month):
+${impulseBuyList}
+
+INVESTMENT PORTFOLIO:
+${sectorBreakdown || '- No investment data available'}
+
+WHEN ASKED FOR A "FINANCIAL HEALTH CHECK":
+1. Analyze ALL the metrics above comprehensively
+2. Identify the top 3 most pressing issues or opportunities
+3. Provide 3 SPECIFIC, ACTIONABLE tips that ${user.firstName} can implement TODAY
+4. Reference exact numbers and show calculations
+5. Be encouraging but honest about areas needing improvement
+`;
 
         // Get Michael's response using Gemini
         const apiKey = process.env.GEMINI_API_KEY;
