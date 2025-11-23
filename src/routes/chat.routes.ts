@@ -18,7 +18,7 @@ router.post('/financial-assistant', authMiddleware, async (req: Request, res: Re
         // Debug API key (safe log)
         const apiKey = process.env.GEMINI_API_KEY;
         console.log('API Key status:', apiKey ? `Present (starts with ${apiKey.substring(0, 4)}...)` : 'Missing');
-        console.log('Model:', "gemini-pro");
+        console.log('Model:', "gemini-2.0-flash");
 
         // Fetch user's financial data
         console.log('Fetching user context...');
@@ -98,23 +98,36 @@ User question: ${message}`;
             validHistory.shift();
         }
 
+        console.log('Starting chat with history length:', validHistory.length);
+        
         const chat = model.startChat({
             history: validHistory,
         });
 
+        console.log('Sending message to Gemini...');
         const result = await chat.sendMessage(context);
+        console.log('Got response from Gemini');
         const aiResponse = result.response.text();
+        console.log('Response text extracted, length:', aiResponse.length);
 
         res.json({ response: aiResponse });
     } catch (error: any) {
-        console.error('Chat error details:', {
-            message: error.message,
-            status: error.status,
-            statusText: error.statusText,
-            details: error.errorDetails
+        console.error('=== CHAT ERROR ===');
+        console.error('Error message:', error.message);
+        console.error('Error name:', error.name);
+        console.error('Error stack:', error.stack);
+        if (error.response) {
+            console.error('Error response:', error.response);
+        }
+        if (error.errorDetails) {
+            console.error('Error details:', JSON.stringify(error.errorDetails, null, 2));
+        }
+        console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        
+        res.status(500).json({ 
+            error: 'Failed to get response from AI',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
-        console.error('Full error:', error);
-        res.status(500).json({ error: 'Failed to get response from AI' });
     }
 });
 

@@ -8,6 +8,7 @@ const TransactionsPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
+    const [useDemo] = useState(true); // Use demo data
 
     useEffect(() => {
         loadTransactions();
@@ -16,8 +17,23 @@ const TransactionsPage: React.FC = () => {
     const loadTransactions = async () => {
         try {
             setLoading(true);
-            const { data } = await transactionAPI.getAll({ limit: 100 });
-            setTransactions(data);
+            
+            if (useDemo) {
+                // Demo data matching DashboardPage
+                setTransactions([
+                    { id: 1, description: 'Starbucks - Student Union', merchantName: 'Starbucks', amount: -5.75, category: 'Food & Dining', date: new Date().toISOString(), type: 'debit' },
+                    { id: 2, description: 'Campus Vending Machine', merchantName: 'Vending', amount: -2.50, category: 'Food & Dining', date: new Date(Date.now() - 86400000).toISOString(), type: 'debit' },
+                    { id: 3, description: 'SAM BLOCK', merchantName: 'SAM BLOCK', amount: 19.33, category: 'Transfer', date: new Date(Date.now() - 172800000).toISOString(), type: 'credit' },
+                    { id: 4, description: 'CENTURYLINK', merchantName: 'CenturyLink', amount: 82.54, category: 'Utilities', date: new Date(Date.now() - 259200000).toISOString(), type: 'credit' },
+                    { id: 5, description: 'BANK OF EURASIA', merchantName: 'Bank of Eurasia', amount: 38.48, category: 'Transfer', date: new Date(Date.now() - 345600000).toISOString(), type: 'credit' },
+                    { id: 6, description: 'Amazon Prime', merchantName: 'Amazon', amount: -14.99, category: 'Shopping', date: new Date(Date.now() - 432000000).toISOString(), type: 'debit' },
+                    { id: 7, description: 'Uber Ride', merchantName: 'Uber', amount: -12.50, category: 'Transportation', date: new Date(Date.now() - 518400000).toISOString(), type: 'debit' },
+                    { id: 8, description: 'Grocery Store', merchantName: 'Whole Foods', amount: -67.43, category: 'Food & Dining', date: new Date(Date.now() - 604800000).toISOString(), type: 'debit' },
+                ]);
+            } else {
+                const { data } = await transactionAPI.getAll({ limit: 100 });
+                setTransactions(data);
+            }
         } catch (error) {
             console.error('Load transactions error:', error);
         } finally {

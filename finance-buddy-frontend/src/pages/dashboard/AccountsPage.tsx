@@ -10,6 +10,7 @@ const AccountsPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState<string | null>(null);
     const [connecting, setConnecting] = useState(false);
+    const [useDemo] = useState(true); // Use demo data
 
     useEffect(() => {
         loadAccounts();
@@ -18,8 +19,54 @@ const AccountsPage: React.FC = () => {
     const loadAccounts = async () => {
         try {
             setLoading(true);
-            const { data } = await tellerAPI.getAccounts();
-            setAccounts(data);
+            
+            if (useDemo) {
+                // Demo data matching DashboardPage
+                setAccounts([
+                    { 
+                        id: '1', 
+                        account_name: 'Chase Checking',
+                        accountName: 'Chase Checking',
+                        account_type: 'depository',
+                        balance_available: 1847.23,
+                        balance_current: 1847.23,
+                        institution_name: 'Chase',
+                        last_four: '4523',
+                        enrollment_id: 'demo1',
+                        status: 'connected',
+                        last_synced_at: new Date().toISOString()
+                    },
+                    { 
+                        id: '2', 
+                        account_name: 'Chase Savings',
+                        accountName: 'Chase Savings',
+                        account_type: 'depository',
+                        balance_available: 1245.50,
+                        balance_current: 1245.50,
+                        institution_name: 'Chase',
+                        last_four: '7891',
+                        enrollment_id: 'demo2',
+                        status: 'connected',
+                        last_synced_at: new Date().toISOString()
+                    },
+                    { 
+                        id: '3', 
+                        account_name: 'Capital One Credit Card',
+                        accountName: 'Capital One Credit Card',
+                        account_type: 'credit',
+                        balance_available: -400.00,
+                        balance_current: -400.00,
+                        institution_name: 'Capital One',
+                        last_four: '3456',
+                        enrollment_id: 'demo3',
+                        status: 'connected',
+                        last_synced_at: new Date().toISOString()
+                    },
+                ]);
+            } else {
+                const { data } = await tellerAPI.getAccounts();
+                setAccounts(data);
+            }
         } catch (error: any) {
             console.error('Load accounts error:', error);
             toast.error('Failed to load accounts');
@@ -63,7 +110,11 @@ const AccountsPage: React.FC = () => {
         }
     };
 
-    const totalBalance = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance_available) || 0), 0);
+    const totalBalance = accounts.reduce((sum, acc) => {
+        const balance = parseFloat(acc.balance_available) || 0;
+        // For credit cards, use absolute value to show total assets
+        return sum + (acc.account_type === 'credit' ? Math.abs(balance) : balance);
+    }, 0);
 
     if (loading) {
         return (
@@ -188,6 +239,7 @@ const getAccountIcon = (type: string) => {
     const icons: any = {
         checking: '🏦',
         savings: '💰',
+        depository: '🏦',
         credit_card: '💳',
         credit: '💳',
     };

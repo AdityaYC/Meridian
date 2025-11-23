@@ -354,8 +354,8 @@ router.post('/orders', authMiddleware, async (req: Request, res: Response) => {
             totalValue: shares * quote.price,
             gainLoss: 0,
             gainLossPercent: 0,
-            sector: profile.sector,
-          },
+            sector: profile.sector as string,
+          } as any,
         });
       }
     } else if (side === 'sell') {

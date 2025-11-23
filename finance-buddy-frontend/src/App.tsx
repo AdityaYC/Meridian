@@ -9,6 +9,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import MeridianDashboard from './pages/dashboard/MeridianDashboard';
+import TradingPage from './pages/dashboard/TradingPage';
 import TestTellerPage from './pages/TestTellerPage';
 import FinancialOverviewPage from './pages/dashboard/FinancialOverviewPage';
 import AccountsPage from './pages/dashboard/AccountsPage';
@@ -42,6 +44,8 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="meridian" element={<MeridianDashboard />} />
+          <Route path="trading" element={<TradingPage />} />
           <Route path="overview" element={<FinancialOverviewPage />} />
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="banker" element={<BankerPage />} />

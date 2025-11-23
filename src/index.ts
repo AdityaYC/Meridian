@@ -58,6 +58,16 @@ import agentRoutes from './routes/agent.routes';
 import aiInsightsRoutes from './routes/ai-insights.routes';
 import portfolioRoutes from './routes/portfolio.routes';
 import chatRoutes from './routes/chat.routes';
+import notificationRoutes from './routes/notification.routes';
+import billRoutes from './routes/bill.routes';
+import receiptRoutes from './routes/receipt.routes';
+import financialHealthRoutes from './routes/financialHealth.routes';
+import cashFlowRoutes from './routes/cashFlow.routes';
+import taxRoutes from './routes/tax.routes';
+import wealthRoutes from './routes/wealth.routes';
+import smartBudgetRoutes from './routes/smartBudget.routes';
+import seedRoutes from './routes/seed.routes';
+import premiumRoutes from './routes/premium.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/teller', tellerRoutes);
@@ -73,6 +83,16 @@ app.use('/api/agent', agentRoutes);
 app.use('/api/ai-insights', aiInsightsRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/bills', billRoutes);
+app.use('/api/receipts', receiptRoutes);
+app.use('/api/financial-health', financialHealthRoutes);
+app.use('/api/cash-flow', cashFlowRoutes);
+app.use('/api/tax', taxRoutes);
+app.use('/api/wealth', wealthRoutes);
+app.use('/api/smart-budget', smartBudgetRoutes);
+app.use('/api/seed', seedRoutes);
+app.use('/api/premium', premiumRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

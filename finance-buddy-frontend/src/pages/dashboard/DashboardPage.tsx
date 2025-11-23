@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 
 const DashboardPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
+    const [useDemo, setUseDemo] = useState(true); // Toggle for demo data
     const [stats, setStats] = useState({
         totalBalance: 0,
         monthlyIncome: 0,
@@ -32,31 +33,71 @@ const DashboardPage: React.FC = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            const [accountsRes, transactionsRes, spendingRes, trendsRes] = await Promise.all([
-                tellerAPI.getAccounts(),
-                transactionAPI.getAll({ limit: 10 }),
-                analyticsAPI.getSpending(30),
-                analyticsAPI.getTrends(6),
-            ]);
+            
+            if (useDemo) {
+                // Demo data with realistic amounts
+                setAccounts([
+                    { id: 1, name: 'Checking', type: 'depository', available: 1847.23, institution: 'Chase' },
+                    { id: 2, name: 'Savings', type: 'depository', available: 1245.50, institution: 'Chase' },
+                    { id: 3, name: 'Credit Card', type: 'credit', available: -400.00, institution: 'Capital One' },
+                ]);
+                
+                setRecentTransactions([
+                    { id: 1, description: 'Starbucks - Student Union', amount: -5.75, category: 'Food & Dining', date: new Date().toISOString() },
+                    { id: 2, description: 'Campus Vending Machine', amount: -2.50, category: 'Food & Dining', date: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 3, description: 'SAM BLOCK', amount: 19.33, category: 'Transfer', date: new Date(Date.now() - 172800000).toISOString() },
+                    { id: 4, description: 'CENTURYLINK', amount: 82.54, category: 'Utilities', date: new Date(Date.now() - 259200000).toISOString() },
+                    { id: 5, description: 'BANK OF EURASIA', amount: 38.48, category: 'Transfer', date: new Date(Date.now() - 345600000).toISOString() },
+                ]);
+                
+                setSpendingData([
+                    { category: 'Education', total: 650 },
+                    { category: 'Transportation', total: 380 },
+                    { category: 'Bills & Utilities', total: 220 },
+                    { category: 'Shopping', total: 180 },
+                    { category: 'Personal Care', total: 95 },
+                ]);
+                
+                setTrendData([
+                    { month: '2025-08', amount: 1200 },
+                    { month: '2025-09', amount: 1450 },
+                    { month: '2025-10', amount: 1580 },
+                    { month: '2025-11', amount: 1679 },
+                ]);
+                
+                setStats({
+                    totalBalance: 3492.73,
+                    monthlyIncome: 5000,
+                    monthlyExpenses: 1679.76,
+                    savingsRate: 66.4,
+                });
+            } else {
+                const [accountsRes, transactionsRes, spendingRes, trendsRes] = await Promise.all([
+                    tellerAPI.getAccounts(),
+                    transactionAPI.getAll({ limit: 10 }),
+                    analyticsAPI.getSpending(30),
+                    analyticsAPI.getTrends(6),
+                ]);
 
-            setAccounts(accountsRes.data);
-            setRecentTransactions(transactionsRes.data);
-            setSpendingData(spendingRes.data);
-            setTrendData(trendsRes.data);
+                setAccounts(accountsRes.data);
+                setRecentTransactions(transactionsRes.data);
+                setSpendingData(spendingRes.data);
+                setTrendData(trendsRes.data);
 
-            // Calculate stats
-            const totalBalance = accountsRes.data.reduce((sum: number, acc: any) => {
-                const balance = acc.balance_available || acc.available || 0;
-                return sum + balance;
-            }, 0);
-            const monthlyExpenses = spendingRes.data.reduce((sum: number, cat: any) => sum + cat.total, 0);
+                // Calculate stats
+                const totalBalance = accountsRes.data.reduce((sum: number, acc: any) => {
+                    const balance = acc.balance_available || acc.available || 0;
+                    return sum + balance;
+                }, 0);
+                const monthlyExpenses = spendingRes.data.reduce((sum: number, cat: any) => sum + cat.total, 0);
 
-            setStats({
-                totalBalance,
-                monthlyIncome: 5000, // Calculate from income transactions
-                monthlyExpenses,
-                savingsRate: totalBalance > 0 ? ((5000 - monthlyExpenses) / 5000) * 100 : 0,
-            });
+                setStats({
+                    totalBalance,
+                    monthlyIncome: 5000,
+                    monthlyExpenses,
+                    savingsRate: totalBalance > 0 ? ((5000 - monthlyExpenses) / 5000) * 100 : 0,
+                });
+            }
         } catch (error) {
             console.error('Dashboard load error:', error);
         } finally {

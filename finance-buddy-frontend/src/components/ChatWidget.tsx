@@ -1,23 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader, Activity } from 'lucide-react';
-import axios from 'axios';
 import toast from 'react-hot-toast';
-
-import { useAuthStore } from '../store/authStore';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-
-const api = axios.create({
-    baseURL: API_URL,
-});
-
-api.interceptors.request.use((config) => {
-    const token = useAuthStore.getState().token;
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+import { api } from '../lib/api';
 
 interface Message {
     role: 'user' | 'assistant';

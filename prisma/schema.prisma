@@ -27,8 +27,176 @@ model User {
   cryptoHoldings CryptoHolding[]
   chatHistory   ChatMessage[]
   alerts        Alert[]
+  notifications Notification[]
+  bills         Bill[]
+  receipts      Receipt[]
+  financialHealthScores FinancialHealthScore[]
+  userCohorts   UserCohort[]
+  cashFlowPredictions CashFlowPrediction[]
+  taxDeductions TaxDeduction[]
+  wealthMilestones WealthMilestone[]
+  smartBudgets  SmartBudget[]
   tellerEnrollments TellerEnrollment[]
+  
+  // Premium Features
+  tradingOrders TradingOrder[]
+  weeklyReports WeeklyReport[]
+  debtAccounts  DebtAccount[]
+  debtPayoffPlan DebtPayoffPlan?
+  portfolioTargets PortfolioTarget[]
+  rebalancingHistory RebalancingHistory[]
+  creditScores  CreditScore[]
+  retirementPlan RetirementPlan?
 }
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // budget_alert, unusual_transaction, bill_reminder, investment_alert, savings_milestone
+  title       String
+  message     String
+  severity    String   @default("info") // info, warning, critical
+  actionUrl   String?
+  isRead      Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
+}
+
+model Bill {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  category        String
+  amount          Float
+  dueDate         DateTime
+  frequency       String   // monthly, weekly, yearly, one-time
+  autopayEnabled  Boolean  @default(false)
+  paymentMethod   String?
+  isActive        Boolean  @default(true)
+  lastPaidDate    DateTime?
+  nextDueDate     DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Receipt {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionId   String?
+  transaction     Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  imageUrl        String
+  merchantName    String?
+  amount          Float?
+  date            DateTime?
+  category        String?
+  items           Json?
+  ocrText         String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([transactionId])
+}
+
+model FinancialHealthScore {
+  id                      String   @id @default(uuid())
+  userId                  String
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  overallScore            Int
+  emergencyFundScore      Int?
+  debtManagementScore     Int?
+  savingsRateScore        Int?
+  investmentDiversityScore Int?
+  budgetAdherenceScore    Int?
+  components              Json?
+  recommendations         Json?
+  calculatedAt            DateTime @default(now())
+
+  @@index([userId, calculatedAt])
+}
+
+model UserCohort {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ageRange    String?
+  incomeRange String?
+  location    String?
+  cohortHash  String
+  createdAt   DateTime @default(now())
+}
+
+model CashFlowPrediction {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  predictionDate   DateTime
+  predictedBalance Float
+  incomeEvents     Json?
+  expenseEvents    Json?
+  confidenceScore  Float?
+  createdAt        DateTime @default(now())
+
+  @@index([userId, predictionDate])
+}
+
+model TaxDeduction {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  taxYear       Int
+  category      String
+  amount        Float
+  description   String?
+  date          DateTime
+  isApproved    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([userId, taxYear])
+}
+
+model WealthMilestone {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestoneType   String
+  targetAmount    Float?
+  currentAmount   Float?
+  progressPercent Float?
+  status          String   @default("in_progress")
+  completedAt     DateTime?
+  orderIndex      Int?
+  createdAt       DateTime @default(now())
+
+  @@index([userId, orderIndex])
+}
+
+model SmartBudget {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         String
+  allocatedAmount  Float
+  spentAmount      Float    @default(0)
+  rolloverAmount   Float    @default(0)
+  autoAdjust       Boolean  @default(true)
+  historicalAverage Float?
+  month            DateTime
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, category, month])
+  @@index([userId, month])
+}
+
 
 model TellerEnrollment {
   id              String   @id @default(uuid())
@@ -105,6 +273,9 @@ model Transaction {
   
   details             Json?
   
+  receipts            Receipt[]
+  taxDeductions       TaxDeduction[]
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
@@ -283,4 +454,129 @@ model CryptoHolding {
   updatedAt        DateTime @default(now())
 
   @@index([userId])
+}
+
+// ============ PREMIUM FEATURES ============
+
+model TradingOrder {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol          String
+  orderType       String   // market, limit, stop_loss
+  side            String   // buy, sell
+  quantity        Float
+  price           Float?
+  stopPrice       Float?
+  status          String   @default("pending") // pending, filled, cancelled, rejected
+  filledPrice     Float?
+  filledQuantity  Float?
+  alpacaOrderId   String?
+  createdAt       DateTime @default(now())
+  filledAt        DateTime?
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model WeeklyReport {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart      DateTime
+  weekEnd        DateTime
+  netWorth       Float
+  netWorthChange Float
+  highlights     Json
+  warnings       Json
+  opportunities  Json
+  nextWeekGoals  Json
+  reportText     String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, weekStart])
+  @@index([userId, weekStart(sort: Desc)])
+}
+
+model DebtAccount {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creditorName   String
+  accountType    String   // credit_card, personal_loan, auto_loan, student_loan, mortgage
+  balance        Float
+  interestRate   Float
+  minimumPayment Float
+  currentPayment Float?
+  dueDate        Int?     // day of month
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+}
+
+model DebtPayoffPlan {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  strategy       String   // avalanche, snowball
+  totalDebt      Float
+  monthlyPayment Float
+  payoffMonths   Int?
+  totalInterest  Float?
+  debtOrder      Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PortfolioTarget {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetType           String
+  targetPercent       Float
+  currentPercent      Float?
+  rebalanceThreshold  Float    @default(5.0)
+  createdAt           DateTime @default(now())
+
+  @@unique([userId, assetType])
+}
+
+model RebalancingHistory {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rebalancedAt DateTime @default(now())
+  trades       Json
+  taxImpact    Float?
+  notes        String?  @db.Text
+}
+
+model CreditScore {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score           Int
+  provider        String?  // experian, equifax, transunion, simulated
+  factors         Json?
+  recommendations Json?
+  recordedAt      DateTime @default(now())
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model RetirementPlan {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentAge           Int
+  retirementAge        Int
+  currentSavings       Float
+  monthlyContribution  Float
+  expectedReturn       Float    @default(7.0)
+  inflationRate        Float    @default(3.0)
+  projectedValue       Float?
+  monthlyIncome        Float?
+  isOnTrack            Boolean?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -6,20 +6,23 @@ import {
     TrendingUp,
     Settings,
     Bell,
-    Search,
-    Menu,
-    X,
+    PieChart,
+    Sparkles,
     LogOut,
     User,
     CreditCard,
     Users,
     Moon,
     Sun,
+    X,
+    Menu,
+    Search,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import logo from '../../assets/meridian-logo.jpg';
 import { useThemeStore } from '../../store/themeStore';
 import ChatWidget from '../ChatWidget';
+import { api } from '../../lib/api';
 
 const DashboardLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -28,11 +31,26 @@ const DashboardLayout: React.FC = () => {
     const { isDarkMode, toggleTheme } = useThemeStore();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
+
+    useEffect(() => {
+        const fetchUnreadCount = async () => {
+            try {
+                const response = await api.get('/notifications/unread-count');
+                setUnreadCount(response.data.count || 0);
+            } catch (error) {
+                // Silently fail if notifications aren't available
+            }
+        };
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 30000); // Check every 30s
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -84,6 +102,20 @@ const DashboardLayout: React.FC = () => {
                             path="/dashboard/banker"
                             active={location.pathname === '/dashboard/banker'}
                             onClick={() => navigate('/dashboard/banker')}
+                        />
+                        <NavItem
+                            icon={<Sparkles className="w-5 h-5" />}
+                            label="Meridian Features"
+                            path="/dashboard/meridian"
+                            active={location.pathname === '/dashboard/meridian'}
+                            onClick={() => navigate('/dashboard/meridian')}
+                        />
+                        <NavItem
+                            icon={<TrendingUp className="w-5 h-5" />}
+                            label="Trading Station"
+                            path="/dashboard/trading"
+                            active={location.pathname === '/dashboard/trading'}
+                            onClick={() => navigate('/dashboard/trading')}
                         />
 
                         <div className="divider my-4" />
@@ -182,9 +214,17 @@ const DashboardLayout: React.FC = () => {
                             </button>
 
                             {/* Notifications */}
-                            <button className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                            <button 
+                                onClick={() => navigate('/dashboard/meridian')}
+                                className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                title="View Notifications"
+                            >
                                 <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
                             </button>
                         </div>
                     </div>
