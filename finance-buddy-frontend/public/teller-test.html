@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Teller Test</title>
+  <script src="https://cdn.teller.io/connect/connect.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f0f0f0;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+  <button id="connect-btn">Connect Bank (Test)</button>
+
+  <script>
+    document.getElementById('connect-btn').addEventListener('click', function () {
+      var teller = TellerConnect.setup({
+        applicationId: 'app_plbijm30hhgpim9f3q000', // Fresh App ID from new setup
+        environment: 'sandbox',
+        onSuccess: function (enrollment) {
+          console.log('User enrolled successfully', enrollment);
+          alert('Success! Token: ' + enrollment.accessToken);
+        },
+        onExit: function () {
+          console.log('User closed the modal');
+        },
+        onFailure: function (failure) {
+          console.error('Failure', failure);
+          alert('Failure: ' + failure.message);
+        }
+      });
+      teller.open();
+    });
+  </script>
+</body>
+
+</html>

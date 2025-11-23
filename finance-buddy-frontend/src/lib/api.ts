@@ -85,4 +85,5 @@ export const tellerAPI = {
         api.get(`/teller/accounts/${accountId}/transactions`, { params }),
     syncAccount: (accountId: string) =>
         api.post(`/teller/accounts/${accountId}/sync`),
+    deleteAccount: (accountId: string) => api.delete(`/teller/accounts/${accountId}`),
 };

@@ -45,7 +45,10 @@ const DashboardPage: React.FC = () => {
             setTrendData(trendsRes.data);
 
             // Calculate stats
-            const totalBalance = accountsRes.data.reduce((sum: number, acc: any) => sum + acc.available, 0);
+            const totalBalance = accountsRes.data.reduce((sum: number, acc: any) => {
+                const balance = acc.balance_available || acc.available || 0;
+                return sum + balance;
+            }, 0);
             const monthlyExpenses = spendingRes.data.reduce((sum: number, cat: any) => sum + cat.total, 0);
 
             setStats({
@@ -58,23 +61,6 @@ const DashboardPage: React.FC = () => {
             console.error('Dashboard load error:', error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleTellerSuccess = async (accessToken: string, enrollment: any) => {
-        try {
-            // Save enrollment to backend
-            await tellerAPI.saveEnrollment({
-                accessToken,
-                enrollmentId: enrollment.id,
-                institutionName: enrollment.institution.name,
-            });
-
-            toast.success('Bank account connected successfully!');
-            loadDashboardData(); // Reload dashboard data
-        } catch (error) {
-            console.error('Save enrollment error:', error);
-            toast.error('Failed to save bank connection');
         }
     };
 
@@ -94,7 +80,7 @@ const DashboardPage: React.FC = () => {
                     <h1 className="heading-2">Dashboard</h1>
                     <p className="text-gray-600 mt-1">Welcome back! Here's your financial overview.</p>
                 </div>
-                <TellerConnectButton onSuccess={handleTellerSuccess} />
+                <TellerConnectButton onSuccess={loadDashboardData} />
             </div>
 
             {/* Stats Grid */}
@@ -297,9 +283,9 @@ const AccountRow: React.FC<{ account: any }> = ({ account }) => {
             </div>
             <div className="text-right">
                 <div className="font-semibold text-gray-900">
-                    ${account.available.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    ${(account.balance_available || account.available || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
-                <div className="text-sm text-gray-500">{account.accountType}</div>
+                <div className="text-sm text-gray-500">{account.account_type || account.accountType}</div>
             </div>
         </div>
     );

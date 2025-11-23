@@ -17,15 +17,30 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  bankAccounts          BankAccount[]
-  transactions          Transaction[]
-  budgets               Budget[]
-  investments           Investment[]
-  chatHistory           ChatMessage[]
-  alerts                Alert[]
-  portfolioTransactions PortfolioTransaction[]
-  aiRecommendations     AIRecommendation[]
-  watchlist             Watchlist[]
+  bankAccounts  BankAccount[]
+  transactions  Transaction[]
+  budgets       Budget[]
+  investments   Investment[]
+  chatHistory   ChatMessage[]
+  alerts        Alert[]
+  tellerEnrollments TellerEnrollment[]
+}
+
+model TellerEnrollment {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  accessToken     String
+  enrollmentId    String   @unique
+  institutionName String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  bankAccounts    BankAccount[]
+  
+  @@index([userId])
 }
 
 model BankAccount {
@@ -33,8 +48,9 @@ model BankAccount {
   userId              String
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  tellerAccessToken   String?  @unique
-  tellerEnrollmentId  String?  @unique
+  enrollmentId        String?
+  enrollment          TellerEnrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  
   tellerAccountId     String   @unique
   
   institutionName     String
@@ -118,64 +134,17 @@ model Investment {
   
   symbol          String
   name            String
-  type            String   // stock, etf, mutual_fund, crypto
+  type            String
   quantity        Float
   purchasePrice   Float
   currentPrice    Float
   totalValue      Float
   gainLoss        Float
   gainLossPercent Float
-  sector          String?
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
-  @@index([userId])
-}
-
-model PortfolioTransaction {
-  id               String   @id @default(uuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  symbol           String
-  transactionType  String   // buy, sell
-  shares           Float
-  price            Float
-  totalAmount      Float
-  transactionDate  DateTime @default(now())
-  
-  @@index([userId])
-  @@index([symbol])
-}
-
-model AIRecommendation {
-  id                  String   @id @default(uuid())
-  userId              String
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  recommendationType  String   // buy, sell, hold, diversify
-  symbol              String?
-  reasoning           String   @db.Text
-  confidenceScore     Float?
-  targetPrice         Float?
-  riskLevel           String?  // low, medium, high
-  isActive            Boolean  @default(true)
-  
-  createdAt           DateTime @default(now())
-  
-  @@index([userId, isActive])
-}
-
-model Watchlist {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  symbol    String
-  addedAt   DateTime @default(now())
-  
-  @@unique([userId, symbol])
   @@index([userId])
 }
 

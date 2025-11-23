@@ -1,4 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -8,138 +11,106 @@ class TellerService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.TELLER_ENVIRONMENT === 'production'
-      ? 'https://api.teller.io'
-      : 'https://sandbox.teller.io';
+    this.baseURL = 'https://api.teller.io';
 
+    const certPath = process.env.TELLER_CERT_PATH;
+    const keyPath = process.env.TELLER_KEY_PATH;
+
+    let httpsAgent;
+
+    if (certPath && keyPath) {
+      try {
+        const cert = fs.readFileSync(path.resolve(process.cwd(), certPath));
+        const key = fs.readFileSync(path.resolve(process.cwd(), keyPath));
+
+        httpsAgent = new https.Agent({
+          cert,
+          key,
+        });
+        console.log('🔐 Teller mTLS configured successfully');
+      } catch (error) {
+        console.error('❌ Failed to load Teller certificates:', error);
+      }
+    }
+
+    // We don't set default auth here because we need to use the access token for each request
     this.client = axios.create({
       baseURL: this.baseURL,
-      auth: {
-        username: process.env.TELLER_API_KEY!,
-        password: '',
-      },
       headers: {
         'Content-Type': 'application/json',
       },
+      httpsAgent,
     });
   }
 
-  async generateConnectUrl(userId: string) {
-    const enrollmentId = `user_${userId}_${Date.now()}`;
-    
+  private getAuthHeader(accessToken: string) {
+    // Use the passed enrollment access token for authentication
+    // This token is specific to the enrollment and is provided by Teller Connect
     return {
-      connectUrl: `${this.baseURL}/connect?application_id=${process.env.TELLER_APP_ID}&enrollment_id=${enrollmentId}`,
-      enrollmentId,
+      auth: {
+        username: accessToken,
+        password: '',
+      },
     };
   }
 
-  async exchangeEnrollment(enrollmentId: string) {
-    const response = await this.client.post('/token', {
-      enrollment_id: enrollmentId,
-    });
-    return response.data.access_token;
-  }
-
   async getAccounts(accessToken: string) {
-    const response = await this.client.get('/accounts', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    return response.data;
-  }
-
-  async getAccountDetails(accessToken: string, accountId: string) {
-    const response = await this.client.get(`/accounts/${accountId}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    return response.data;
-  }
-
-  async getBalance(accessToken: string, accountId: string) {
-    const response = await this.client.get(`/accounts/${accountId}/balances`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    return response.data;
-  }
-
-  async getTransactions(accessToken: string, accountId: string, count: number = 100) {
-    const response = await this.client.get(`/accounts/${accountId}/transactions`, {
-      params: { count },
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    return response.data;
-  }
-
-  async syncAccount(userId: string, accessToken: string, tellerAccountId: string) {
     try {
-      const accountDetails = await this.getAccountDetails(accessToken, tellerAccountId);
-      const balance = await this.getBalance(accessToken, tellerAccountId);
+      console.log('🔑 Using Enrollment Token for auth:', accessToken.substring(0, 20) + '...');
+      console.log('🔐 HTTPS Agent configured:', !!this.client.defaults.httpsAgent);
+      const response = await this.client.get('/accounts', this.getAuthHeader(accessToken));
+      return response.data;
+    } catch (error: any) {
+      console.error('Teller getAccounts error:', error.response?.data || error.message);
+      throw new Error('Failed to fetch accounts from Teller');
+    }
+  }
 
-      const account = await prisma.bankAccount.upsert({
-        where: { tellerAccountId },
-        update: {
-          available: parseFloat(balance.available) || 0,
-          current: parseFloat(balance.ledger) || 0,
-          limit: accountDetails.type === 'credit' ? parseFloat(accountDetails.limit || '0') : null,
-          lastSyncedAt: new Date(),
-          status: 'active',
-        },
-        create: {
-          userId,
-          tellerAccessToken: accessToken,
-          tellerAccountId,
-          institutionName: accountDetails.institution?.name || 'Unknown',
-          accountName: accountDetails.name || 'Account',
-          accountType: accountDetails.type || 'checking',
-          accountNumber: accountDetails.last_four || null,
-          available: parseFloat(balance.available) || 0,
-          current: parseFloat(balance.ledger) || 0,
-          limit: accountDetails.type === 'credit' ? parseFloat(accountDetails.limit || '0') : null,
-        },
-      });
-
-      return account;
-    } catch (error) {
-      console.error('Teller sync error:', error);
+  async getAccount(accessToken: string, accountId: string) {
+    try {
+      const response = await this.client.get(`/accounts/${accountId}`, this.getAuthHeader(accessToken));
+      return response.data;
+    } catch (error: any) {
+      console.error('Teller getAccount error:', error.response?.data || error.message);
       throw error;
     }
   }
 
-  async syncTransactions(userId: string, dbAccountId: string, accessToken: string, tellerAccountId: string) {
+  async getBalances(accessToken: string, accountId: string) {
     try {
-      const transactions = await this.getTransactions(accessToken, tellerAccountId);
-      
-      const savedTransactions = [];
+      const response = await this.client.get(`/accounts/${accountId}/balances`, this.getAuthHeader(accessToken));
+      return response.data;
+    } catch (error: any) {
+      console.error('Teller getBalances error:', error.response?.data || error.message);
+      throw error;
+    }
+  }
 
-      for (const txn of transactions) {
-        const saved = await prisma.transaction.upsert({
-          where: { tellerTransactionId: txn.id },
-          update: {
-            amount: parseFloat(txn.amount),
-            status: txn.status,
-            description: txn.description || 'No description',
-            merchantName: txn.details?.counterparty?.name || null,
-            details: txn,
-          },
-          create: {
-            userId,
-            bankAccountId: dbAccountId,
-            tellerTransactionId: txn.id,
-            amount: parseFloat(txn.amount),
-            date: new Date(txn.date),
-            description: txn.description || 'No description',
-            merchantName: txn.details?.counterparty?.name || null,
-            status: txn.status,
-            type: txn.type,
-            details: txn,
-          },
-        });
+  async getTransactions(accessToken: string, accountId: string, params: any = {}) {
+    try {
+      const response = await this.client.get(`/accounts/${accountId}/transactions`, {
+        ...this.getAuthHeader(accessToken),
+        params: {
+          count: params.count || 100,
+          from_id: params.fromId,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Teller getTransactions error:', error.response?.data || error.message);
+      throw error;
+    }
+  }
 
-        savedTransactions.push(saved);
-      }
-
-      return savedTransactions;
-    } catch (error) {
-      console.error('Transaction sync error:', error);
+  async getTransactionDetails(accessToken: string, accountId: string, transactionId: string) {
+    try {
+      const response = await this.client.get(
+        `/accounts/${accountId}/transactions/${transactionId}`,
+        this.getAuthHeader(accessToken)
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Teller getTransactionDetails error:', error.response?.data || error.message);
       throw error;
     }
   }

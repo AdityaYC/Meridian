@@ -6,3 +6,7 @@ dist
 .DS_Store
 
 /src/generated/prisma
+
+# Teller certificates
+teller finalised/
+teller/

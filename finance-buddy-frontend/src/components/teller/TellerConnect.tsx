@@ -1,68 +1,69 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useTellerConnect } from 'teller-connect-react';
+import { tellerAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { Plus } from 'lucide-react';
 
 interface TellerConnectButtonProps {
-    onSuccess: (accessToken: string, enrollment: any) => void;
-    onExit?: () => void;
+    onSuccess?: () => void;
 }
 
-declare global {
-    interface Window {
-        TellerConnect: any;
+const TellerConnectButton: React.FC<TellerConnectButtonProps> = ({ onSuccess }) => {
+    const appId = import.meta.env.VITE_TELLER_APP_ID;
+
+    if (!appId) {
+        console.error('❌ VITE_TELLER_APP_ID is not set in environment variables');
     }
-}
 
-const TellerConnectButton: React.FC<TellerConnectButtonProps> = ({ onSuccess, onExit }) => {
-    const applicationId = import.meta.env.VITE_TELLER_APP_ID || 'app_no402286a4r0e93057005';
-    const [ready, setReady] = useState(false);
+    const { open, ready } = useTellerConnect({
+        applicationId: appId || 'app_plbijm30hhgpim9f3q000', // Fallback to new App ID
+        environment: 'sandbox', // ✅ Explicitly set to sandbox
+        onSuccess: async (authorization) => {
+            console.log('✅ Teller enrollment success:', authorization);
+            console.log('Access Token:', authorization.accessToken);
+            console.log('Enrollment ID:', authorization.enrollment.id);
+            console.log('Institution:', authorization.enrollment.institution);
 
-    useEffect(() => {
-        // Check if Teller script is loaded
-        const checkScript = () => {
-            if (window.TellerConnect) {
-                setReady(true);
-            } else {
-                setTimeout(checkScript, 500);
+            try {
+                // Show loading toast
+                const toastId = toast.loading('Saving your bank connection...');
+
+                // Save enrollment to backend
+                const response = await tellerAPI.saveEnrollment({
+                    accessToken: authorization.accessToken,
+                    enrollmentId: authorization.enrollment.id,
+                    institution: authorization.enrollment.institution,
+                });
+
+                console.log('✅ Enrollment saved:', response.data);
+
+                toast.success(
+                    `Connected to ${authorization.enrollment.institution?.name || 'your bank'}! Found ${response.data.accountCount} account(s).`,
+                    { id: toastId, duration: 5000 }
+                );
+
+                // Callback to refresh accounts list
+                if (onSuccess) {
+                    setTimeout(() => onSuccess(), 500);
+                }
+
+            } catch (error: any) {
+                console.error('❌ Failed to save enrollment:', error);
+                toast.error('Failed to save bank connection: ' + (error.response?.data?.error || error.message), { duration: 6000 });
             }
-        };
-        checkScript();
-    }, []);
-
-    const handleOpen = () => {
-        if (!window.TellerConnect) {
-            toast.error('Teller is not ready yet. Please reload.');
-            return;
-        }
-
-        try {
-            const teller = window.TellerConnect.setup({
-                applicationId,
-                onInit: function () {
-                    console.log('Teller initialized');
-                },
-                onSuccess: function (enrollment: any) {
-                    console.log('Teller enrollment successful:', enrollment);
-                    toast.success(`Connected to ${enrollment.institution.name}!`);
-                    onSuccess(enrollment.accessToken, enrollment);
-                },
-                onExit: function () {
-                    console.log('Teller Connect closed');
-                    if (onExit) onExit();
-                },
-            });
-
-            teller.open();
-        } catch (error) {
-            console.error('Failed to open Teller:', error);
-            toast.error('Failed to open bank connection');
-        }
-    };
+        },
+        onExit: () => {
+            console.log('Teller Connect closed');
+        },
+    });
 
     return (
         <button
-            onClick={handleOpen}
-            disabled={!ready}
+            onClick={() => {
+                console.log('Opening Teller Connect with App ID:', appId);
+                if (open) open();
+            }}
+            disabled={!ready || !appId}
             className="btn-primary inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
             <Plus className="w-5 h-5" />

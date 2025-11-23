@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { RefreshCw, ExternalLink, CreditCard, Trash2 } from 'lucide-react';
+import { RefreshCw, Trash2, ExternalLink, CreditCard } from 'lucide-react';
+import TellerConnectButton from '../../components/teller/TellerConnect';
 import { tellerAPI } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import TellerConnectButton from '../../components/teller/TellerConnect';
 
 const AccountsPage: React.FC = () => {
     const [accounts, setAccounts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState<string | null>(null);
+    const [connecting, setConnecting] = useState(false);
 
     useEffect(() => {
         loadAccounts();
@@ -19,44 +20,58 @@ const AccountsPage: React.FC = () => {
             setLoading(true);
             const { data } = await tellerAPI.getAccounts();
             setAccounts(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Load accounts error:', error);
+            toast.error('Failed to load accounts');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleTellerSuccess = async (accessToken: string, enrollment: any) => {
-        try {
-            // Save enrollment to backend
-            await tellerAPI.saveEnrollment({
-                accessToken,
-                enrollmentId: enrollment.id,
-                institutionName: enrollment.institution.name,
-            });
-
-            toast.success('Bank account connected successfully!');
-            loadAccounts();
-        } catch (error) {
-            console.error('Save enrollment error:', error);
-            toast.error('Failed to save bank connection');
-        }
+    const handleTellerSuccess = async () => {
+        // The TellerConnectButton now handles the saving and toast.
+        // We just need to reload the accounts.
+        loadAccounts();
     };
 
     const handleSync = async (accountId: string) => {
         try {
             setSyncing(accountId);
-            await tellerAPI.syncAccount(accountId);
-            toast.success('Account synced successfully');
+            const { data } = await tellerAPI.syncAccount(accountId);
+
+            toast.success(
+                `Synced! ${data.newTransactions} new transactions found.`
+            );
+
             loadAccounts();
-        } catch (error) {
+        } catch (error: any) {
             toast.error('Failed to sync account');
         } finally {
             setSyncing(null);
         }
     };
 
-    const totalBalance = accounts.reduce((sum, acc) => sum + acc.available, 0);
+    const handleDelete = async (accountId: string) => {
+        if (!confirm('Are you sure you want to disconnect this account?')) return;
+
+        try {
+            await tellerAPI.deleteAccount(accountId);
+            toast.success('Account disconnected');
+            loadAccounts();
+        } catch (error) {
+            toast.error('Failed to disconnect account');
+        }
+    };
+
+    const totalBalance = accounts.reduce((sum, acc) => sum + (parseFloat(acc.balance_available) || 0), 0);
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
@@ -68,6 +83,7 @@ const AccountsPage: React.FC = () => {
                 <TellerConnectButton onSuccess={handleTellerSuccess} />
             </div>
 
+            {/* Total Balance Card */}
             <div className="card p-6 bg-gradient-to-br from-primary-500 to-primary-700 text-white">
                 <div className="flex items-center justify-between">
                     <div>
@@ -83,27 +99,72 @@ const AccountsPage: React.FC = () => {
                 </div>
             </div>
 
-            {loading ? (
-                <div className="flex items-center justify-center h-96">
-                    <div className="w-8 h-8 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-                </div>
-            ) : accounts.length === 0 ? (
+            {/* Accounts List */}
+            {accounts.length === 0 ? (
                 <div className="card p-12 text-center">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CreditCard className="w-8 h-8 text-gray-400" />
+                        <div className="text-4xl">🏦</div>
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No accounts connected</h3>
-                    <p className="text-gray-600 mb-6">Connect your first bank account to start tracking your finances</p>
+                    <p className="text-gray-600 mb-6">Connect your bank account to start tracking your finances</p>
                     <TellerConnectButton onSuccess={handleTellerSuccess} />
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid gap-4">
                     {accounts.map((account) => (
-                        <AccountCard key={account.id} account={account} onSync={handleSync} syncing={syncing === account.id} />
+                        <div key={account.id} className="card p-6 hover:shadow-medium transition-shadow">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
+                                        {getAccountIcon(account.account_type)}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900 text-lg">{account.account_name}</h3>
+                                        <p className="text-sm text-gray-600">{account.institution_name}</p>
+                                        {account.last_four && (
+                                            <p className="text-xs text-gray-500 mt-1">•••• {account.last_four}</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-gray-900">
+                                        ${parseFloat(account.balance_available).toFixed(2)}
+                                    </div>
+                                    <p className="text-sm text-gray-600 mt-1">Available</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 mt-4 border-t border-gray-200">
+                                <div className="flex items-center gap-4">
+                                    <span className="badge bg-green-100 text-green-700">{account.status}</span>
+                                    <span className="text-xs text-gray-500">
+                                        Last synced: {format(new Date(account.last_synced_at), 'MMM d, h:mm a')}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleSync(account.id)}
+                                        disabled={syncing === account.id}
+                                        className="btn-ghost text-sm inline-flex items-center gap-2"
+                                    >
+                                        <RefreshCw className={`w-4 h-4 ${syncing === account.id ? 'animate-spin' : ''}`} />
+                                        Sync
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(account.id)}
+                                        className="btn-ghost text-sm text-red-600 hover:bg-red-50 inline-flex items-center gap-2"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     ))}
                 </div>
             )}
 
+            {/* Info Card */}
             <div className="card p-6 bg-blue-50 border-blue-200">
                 <div className="flex gap-4">
                     <div className="flex-shrink-0">
@@ -114,8 +175,7 @@ const AccountsPage: React.FC = () => {
                     <div>
                         <h4 className="font-semibold text-gray-900 mb-1">Secure Banking Connection</h4>
                         <p className="text-sm text-gray-600 leading-relaxed">
-                            Your bank credentials are encrypted and never stored on our servers. We use Teller's bank-level security to keep
-                            your financial data safe.
+                            Your bank credentials are encrypted and never stored on our servers. We use Teller's bank-level security.
                         </p>
                     </div>
                 </div>
@@ -124,92 +184,14 @@ const AccountsPage: React.FC = () => {
     );
 };
 
-const AccountCard: React.FC<{ account: any; onSync: (id: string) => void; syncing: boolean }> = ({
-    account,
-    onSync,
-    syncing,
-}) => {
-    const getAccountIcon = (type: string) => {
-        const icons: any = {
-            checking: '🏦',
-            savings: '💰',
-            credit_card: '💳',
-            credit: '💳',
-        };
-        return icons[type] || '💼';
+const getAccountIcon = (type: string) => {
+    const icons: any = {
+        checking: '🏦',
+        savings: '💰',
+        credit_card: '💳',
+        credit: '💳',
     };
-
-    const getStatusColor = (status: string) => {
-        const colors: any = {
-            active: 'bg-green-100 text-green-700',
-            disconnected: 'bg-red-100 text-red-700',
-            reauth_required: 'bg-yellow-100 text-yellow-700',
-        };
-        return colors[status] || 'bg-gray-100 text-gray-700';
-    };
-
-    return (
-        <div className="card p-6 hover:shadow-medium transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
-                        {getAccountIcon(account.accountType)}
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{account.accountName}</h3>
-                        <p className="text-sm text-gray-600">{account.institutionName}</p>
-                        {account.accountNumber && <p className="text-xs text-gray-500 mt-1">•••• {account.accountNumber}</p>}
-                    </div>
-                </div>
-                <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">
-                        ${account.available.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">Available</p>
-                </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <div className="flex items-center gap-4">
-                    <span className={`badge ${getStatusColor(account.status)}`}>{account.status.replace('_', ' ')}</span>
-                    <span className="text-xs text-gray-500">
-                        Last synced: {format(new Date(account.lastSyncedAt), 'MMM d, h:mm a')}
-                    </span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => onSync(account.id)}
-                        disabled={syncing}
-                        className="btn-ghost text-sm inline-flex items-center gap-2 disabled:opacity-50"
-                    >
-                        <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                        {syncing ? 'Syncing...' : 'Sync'}
-                    </button>
-                    <button className="btn-ghost text-sm text-red-600 hover:bg-red-50 inline-flex items-center gap-2">
-                        <Trash2 className="w-4 h-4" />
-                        Remove
-                    </button>
-                </div>
-            </div>
-
-            {account.accountType === 'credit' && account.limit && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Credit Limit</span>
-                        <span className="font-semibold text-gray-900">
-                            ${account.limit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm mt-2">
-                        <span className="text-gray-600">Available Credit</span>
-                        <span className="font-semibold text-gray-900">
-                            ${(account.limit - Math.abs(account.current)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </span>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+    return icons[type] || '💼';
 };
 
 export default AccountsPage;
