@@ -1,18 +1,50 @@
-# 🚀 Finance Buddy Backend
+# 🌟 Meridian - AI-Powered Personal Finance Platform
 
-Complete Node.js + Express + TypeScript backend with real-time banking integration via Teller API, AI transaction categorization, and live avatar chat.
+A comprehensive full-stack financial management platform with real-time banking integration, AI-powered insights, live trading, and an intelligent chatbot financial advisor powered by Google Gemini.
 
-## 🎯 Features
+## ✨ Features
 
+### 🏦 Banking & Transactions
 - ✅ **Real-time Banking** - Connect Chase, BofA, Wells Fargo, Amex via Teller API
-- ✅ **AI Categorization** - OpenAI-powered transaction categorization
-- ✅ **Live Avatar Chat** - Fish Audio + Tavus integration
-- ✅ **WebSocket Notifications** - Real-time updates for transactions and alerts
-- ✅ **PostgreSQL + Prisma ORM** - Type-safe database access
-- ✅ **JWT Authentication** - Secure user authentication
-- ✅ **Fraud Detection** - Automatic alerts for large transactions
-- ✅ **Budget Management** - Track spending by category with alerts
-- ✅ **Analytics** - Spending insights and monthly trends
+- ✅ **AI Categorization** - Gemini-powered transaction categorization
+- ✅ **Receipt Scanning** - OCR + AI extraction of receipt data
+- ✅ **Bill Payment** - Automated bill tracking and payment reminders
+- ✅ **Cash Flow Prediction** - ML-based cash flow forecasting
+
+### 🤖 AI Financial Advisor
+- ✅ **Michael - Your AI CFP®** - Intelligent chatbot with access to your financial data
+- ✅ **Natural Language Queries** - Ask about spending, budgets, and investments
+- ✅ **Personalized Insights** - Context-aware financial advice
+- ✅ **Real-time Analysis** - Instant analysis of your financial health
+
+### 📊 Premium Meridian Features
+- ✅ **Financial Health Score** - Comprehensive scoring across multiple dimensions
+- ✅ **Weekly AI Reports** - Automated financial digest with insights
+- ✅ **Debt Payoff Planner** - Optimized debt elimination strategies
+- ✅ **Portfolio Rebalancing** - Automated investment rebalancing alerts
+- ✅ **Credit Score Monitoring** - Track and improve your credit score
+- ✅ **Retirement Calculator** - Plan your financial future
+- ✅ **Tax Insights** - Identify deductions and tax-saving opportunities
+- ✅ **Wealth Roadmap** - Personalized financial milestones
+
+### 📈 Trading & Investments
+- ✅ **Real-time Stock Trading** - Live market data and order execution
+- ✅ **Portfolio Analytics** - Advanced portfolio tracking and analysis
+- ✅ **AI Stock Predictions** - Gemini-powered market analysis
+- ✅ **Insider Trading Alerts** - Track insider activity
+- ✅ **Market News** - Real-time financial news integration
+
+### 🔔 Smart Notifications
+- ✅ **WebSocket Real-time Updates** - Instant transaction and alert notifications
+- ✅ **Fraud Detection** - Automatic alerts for suspicious activity
+- ✅ **Budget Alerts** - Spending limit notifications
+- ✅ **Bill Reminders** - Never miss a payment
+
+### 🎨 Modern UI/UX
+- ✅ **Beautiful Dashboard** - Clean, intuitive interface
+- ✅ **Dark Mode** - Full dark mode support
+- ✅ **Responsive Design** - Works on all devices
+- ✅ **Real-time Charts** - Interactive data visualizations
 
 ## 📋 Prerequisites
 
@@ -27,18 +59,20 @@ Complete Node.js + Express + TypeScript backend with real-time banking integrati
 - Get your `TELLER_APP_ID` and `TELLER_API_KEY`
 - Use sandbox mode for testing
 
-### 2. OpenAI (AI Categorization)
-- Sign up: https://platform.openai.com
-- Create API key: https://platform.openai.com/api-keys
-- Get your `OPENAI_API_KEY`
+### 2. Google Gemini API (AI Features)
+- Sign up: https://makersuite.google.com
+- Create API key: https://makersuite.google.com/app/apikey
+- Get your `GEMINI_API_KEY`
+- **Note**: The chatbot and AI features use Gemini 2.0 Flash model
 
-### 3. Fish Audio (Text-to-Speech)
-- Sign up: https://fish.audio
-- Get your `FISH_AUDIO_API_KEY` and `FISH_AUDIO_VOICE_ID`
+### 3. Alpaca API (Stock Trading)
+- Sign up: https://alpaca.markets
+- Get your `ALPACA_API_KEY` and `ALPACA_SECRET_KEY`
+- Use paper trading for testing
 
-### 4. Tavus (Avatar Video)
-- Sign up: https://tavus.io
-- Get your `TAVUS_API_KEY` and `TAVUS_AVATAR_ID`
+### 4. News API (Market News)
+- Sign up: https://newsapi.org
+- Get your `NEWS_API_KEY`
 
 ### 5. PostgreSQL Database
 Choose one:
@@ -48,47 +82,69 @@ Choose one:
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### 1. Clone the Repository
+```bash
+git clone https://github.com/AdityaYC/Meridian.git
+cd Meridian
+```
+
+### 2. Install Backend Dependencies
 ```bash
 npm install
 ```
 
-### 2. Configure Environment Variables
-Edit `.env` file with your credentials:
+### 3. Install Frontend Dependencies
+```bash
+cd finance-buddy-frontend
+npm install
+cd ..
+```
+
+### 4. Configure Environment Variables
+
+Create `.env` file in the root directory:
 
 ```env
 # Server
-PORT=5000
+PORT=3001
 NODE_ENV=development
 
 # Database (example for Railway/Supabase)
-DATABASE_URL="postgresql://username:password@host:5432/finance_buddy?schema=public"
+DATABASE_URL="postgresql://username:password@host:5432/meridian?schema=public"
 
 # JWT Secret (generate a secure random string)
 JWT_SECRET=your_super_secret_jwt_key_min_32_chars_change_in_production
 
-# Teller API
+# Teller API (Banking)
 TELLER_APP_ID=your_teller_app_id
 TELLER_API_KEY=your_teller_api_key
 TELLER_ENVIRONMENT=sandbox
 TELLER_WEBHOOK_SECRET=your_webhook_secret
+TELLER_CERT_PATH=./certs/certificate.pem
+TELLER_KEY_PATH=./certs/private_key.pem
 
-# OpenAI
-OPENAI_API_KEY=sk-your-openai-api-key
+# Google Gemini API (AI Chatbot & Features)
+GEMINI_API_KEY=your_gemini_api_key
 
-# Fish Audio
-FISH_AUDIO_API_KEY=your_fish_audio_key
-FISH_AUDIO_VOICE_ID=your_voice_id
+# Alpaca API (Stock Trading)
+ALPACA_API_KEY=your_alpaca_api_key
+ALPACA_SECRET_KEY=your_alpaca_secret_key
+ALPACA_BASE_URL=https://paper-api.alpaca.markets
 
-# Tavus
-TAVUS_API_KEY=your_tavus_api_key
-TAVUS_AVATAR_ID=your_avatar_id
+# News API
+NEWS_API_KEY=your_news_api_key
 
 # Frontend
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5174
 ```
 
-### 3. Setup Database
+Create `finance-buddy-frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:3001/api
+```
+
+### 5. Setup Database
 ```bash
 # Generate Prisma client
 npm run prisma:generate
@@ -96,16 +152,34 @@ npm run prisma:generate
 # Run database migrations
 npm run prisma:migrate
 
+# (Optional) Seed demo data
+npx ts-node src/scripts/seedMeridianData.ts
+
 # (Optional) Open Prisma Studio to view data
 npm run prisma:studio
 ```
 
-### 4. Start Development Server
+### 6. Start Development Servers
+
+**Terminal 1 - Backend:**
 ```bash
 npm run dev
 ```
+Backend will start on `http://localhost:3001`
 
-Server will start on `http://localhost:5000`
+**Terminal 2 - Frontend:**
+```bash
+cd finance-buddy-frontend
+npm run dev
+```
+Frontend will start on `http://localhost:5174`
+
+### 7. Access the Application
+
+Open your browser and navigate to:
+- **Frontend**: http://localhost:5174
+- **Backend API**: http://localhost:3001
+- **API Health**: http://localhost:3001/health
 
 ## 📡 API Endpoints
 
@@ -125,9 +199,38 @@ Server will start on `http://localhost:5000`
 - `GET /api/transactions` - Get all transactions (with filters)
 - `GET /api/transactions/:id` - Get single transaction
 
-### Avatar Chat
-- `POST /api/avatar/chat` - Chat with AI financial advisor
-- `GET /api/avatar/history` - Get chat history
+### AI Chatbot
+- `POST /api/chat/financial-assistant` - Chat with Michael (AI Financial Advisor)
+- Access via chat widget in the dashboard
+
+### Premium Features
+- `GET /api/financial-health` - Get financial health score
+- `GET /api/cash-flow/predict` - Get cash flow predictions
+- `GET /api/premium/reports/weekly` - Get weekly AI reports
+- `POST /api/premium/reports/weekly/generate` - Generate new report
+- `GET /api/premium/debt/accounts` - Get debt accounts
+- `POST /api/premium/debt/payoff-plan` - Calculate debt payoff plan
+- `GET /api/premium/rebalancing/check` - Check portfolio rebalancing
+- `GET /api/premium/credit/score` - Get credit score
+- `GET /api/premium/retirement/plan` - Get retirement plan
+- `POST /api/premium/retirement/plan` - Update retirement plan
+
+### Trading
+- `GET /api/portfolio/stocks` - Get stock portfolio
+- `POST /api/portfolio/stocks/buy` - Buy stocks
+- `POST /api/portfolio/stocks/sell` - Sell stocks
+- `GET /api/portfolio/stocks/:symbol/quote` - Get stock quote
+- `GET /api/portfolio/stocks/:symbol/predict` - Get AI price prediction
+
+### Bills & Receipts
+- `GET /api/bills` - Get all bills
+- `POST /api/bills` - Create bill
+- `POST /api/receipts/scan` - Scan receipt (upload image)
+
+### Notifications
+- `GET /api/notifications` - Get all notifications
+- `GET /api/notifications/unread-count` - Get unread count
+- `PATCH /api/notifications/:id/read` - Mark as read
 
 ### Alerts
 - `GET /api/alerts` - Get all alerts
@@ -172,41 +275,59 @@ socket.on('alert', (alert) => {
 ## 🗂️ Project Structure
 
 ```
-finance-buddy-backend/
-├── prisma/
-│   ├── schema.prisma          # Database schema
-│   └── migrations/            # Database migrations
-├── src/
+Meridian/
+├── finance-buddy-frontend/    # React + TypeScript Frontend
+│   ├── src/
+│   │   ├── components/        # Reusable components
+│   │   │   ├── ChatWidget.tsx # AI Chatbot widget
+│   │   │   ├── layout/        # Layout components
+│   │   │   └── modals/        # Modal dialogs
+│   │   ├── pages/             # Page components
+│   │   │   ├── dashboard/     # Dashboard pages
+│   │   │   │   ├── MeridianDashboard.tsx
+│   │   │   │   ├── TradingPage.tsx
+│   │   │   │   └── ...
+│   │   │   ├── LandingPage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   └── RegisterPage.tsx
+│   │   ├── store/             # Zustand state management
+│   │   ├── lib/               # Utilities and API client
+│   │   └── App.tsx            # Main app component
+│   ├── public/                # Static assets
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── src/                       # Backend (Node.js + Express)
 │   ├── controllers/           # Request handlers
 │   │   ├── auth.controller.ts
 │   │   ├── teller.controller.ts
-│   │   ├── transaction.controller.ts
-│   │   ├── avatar.controller.ts
-│   │   ├── alert.controller.ts
-│   │   ├── budget.controller.ts
-│   │   ├── analytics.controller.ts
-│   │   └── investment.controller.ts
+│   │   ├── banker.controller.ts
+│   │   └── ...
 │   ├── services/              # Business logic
-│   │   ├── teller.service.ts
-│   │   ├── ai.service.ts
-│   │   ├── avatar.service.ts
-│   │   └── alert.service.ts
+│   │   ├── financialHealth.service.ts
+│   │   ├── cashFlow.service.ts
+│   │   ├── trading.service.ts
+│   │   ├── receipt.service.ts
+│   │   ├── prediction.service.ts
+│   │   └── ...
 │   ├── routes/                # API routes
 │   │   ├── auth.routes.ts
-│   │   ├── teller.routes.ts
-│   │   ├── transaction.routes.ts
-│   │   ├── avatar.routes.ts
-│   │   ├── alert.routes.ts
-│   │   ├── budget.routes.ts
-│   │   ├── analytics.routes.ts
-│   │   ├── investment.routes.ts
-│   │   └── ai.routes.ts
+│   │   ├── chat.routes.ts
+│   │   ├── premium.routes.ts
+│   │   ├── portfolio.routes.ts
+│   │   └── ...
 │   ├── middleware/            # Express middleware
 │   │   └── auth.middleware.ts
+│   ├── scripts/               # Utility scripts
+│   │   └── seedMeridianData.ts
 │   └── index.ts               # Main server file
-├── .env                       # Environment variables
-├── .gitignore
-├── package.json
+│
+├── prisma/
+│   ├── schema.prisma          # Database schema
+│   └── migrations/            # Database migrations
+│
+├── .env                       # Backend environment variables
+├── package.json               # Backend dependencies
 ├── tsconfig.json
 └── README.md
 ```
@@ -215,7 +336,7 @@ finance-buddy-backend/
 
 ### 1. Register a User
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST http://localhost:3001/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -227,7 +348,7 @@ curl -X POST http://localhost:5000/api/auth/register \
 
 ### 2. Login
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -235,20 +356,31 @@ curl -X POST http://localhost:5000/api/auth/login \
   }'
 ```
 
-### 3. Get Teller Connect URL (use token from login)
+### 3. Chat with AI Financial Advisor
 ```bash
-curl -X GET http://localhost:5000/api/teller/connect \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+curl -X POST http://localhost:3001/api/chat/financial-assistant \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What is my spending this month?",
+    "history": []
+  }'
 ```
 
 ## 🔧 Available Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build for production
-- `npm start` - Start production server
+### Backend
+- `npm run dev` - Start backend development server with hot reload
+- `npm run build` - Build backend for production
+- `npm start` - Start production backend server
 - `npm run prisma:generate` - Generate Prisma client
 - `npm run prisma:migrate` - Run database migrations
 - `npm run prisma:studio` - Open Prisma Studio
+
+### Frontend
+- `cd finance-buddy-frontend && npm run dev` - Start frontend development server
+- `cd finance-buddy-frontend && npm run build` - Build frontend for production
+- `cd finance-buddy-frontend && npm run preview` - Preview production build
 
 ## 🛡️ Security Notes
 
@@ -277,15 +409,15 @@ git push heroku main
 
 Before running, make sure you have:
 - ✅ `DATABASE_URL` - PostgreSQL connection string
-- ✅ `JWT_SECRET` - Random secure string
+- ✅ `JWT_SECRET` - Random secure string (32+ characters)
 - ✅ `TELLER_APP_ID` - From Teller dashboard
 - ✅ `TELLER_API_KEY` - From Teller dashboard
-- ✅ `OPENAI_API_KEY` - From OpenAI platform
-- ✅ `FISH_AUDIO_API_KEY` - From Fish Audio
-- ✅ `FISH_AUDIO_VOICE_ID` - From Fish Audio
-- ✅ `TAVUS_API_KEY` - From Tavus
-- ✅ `TAVUS_AVATAR_ID` - From Tavus
-- ✅ `FRONTEND_URL` - Your frontend URL
+- ✅ `GEMINI_API_KEY` - From Google AI Studio
+- ✅ `ALPACA_API_KEY` - From Alpaca Markets
+- ✅ `ALPACA_SECRET_KEY` - From Alpaca Markets
+- ✅ `NEWS_API_KEY` - From NewsAPI.org
+- ✅ `FRONTEND_URL` - Your frontend URL (http://localhost:5174)
+- ✅ `VITE_API_URL` - Backend API URL in frontend .env (http://localhost:3001/api)
 
 ## 🐛 Troubleshooting
 
@@ -301,20 +433,95 @@ npm run prisma:generate
 
 ### Port Already in Use
 - Change `PORT` in `.env`
-- Or kill process using port 5000:
+- Or kill process using the port:
 ```bash
-lsof -ti:5000 | xargs kill -9
+# Backend (port 3001)
+lsof -ti:3001 | xargs kill -9
+
+# Frontend (port 5174)
+lsof -ti:5174 | xargs kill -9
 ```
+
+### Chatbot Not Working
+- Verify `GEMINI_API_KEY` is set correctly
+- Check that you're using Gemini 2.0 Flash model
+- Ensure backend server is running on port 3001
+- Check browser console for errors
+
+### Frontend Can't Connect to Backend
+- Verify `VITE_API_URL` in frontend `.env` is `http://localhost:3001/api`
+- Ensure backend is running on port 3001
+- Check CORS settings in backend
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **React 19** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **TailwindCSS** - Styling
+- **Zustand** - State management
+- **React Router** - Routing
+- **Recharts** - Data visualization
+- **Framer Motion** - Animations
+- **Lucide React** - Icons
+
+### Backend
+- **Node.js** - Runtime
+- **Express** - Web framework
+- **TypeScript** - Type safety
+- **Prisma** - ORM
+- **PostgreSQL** - Database
+- **Socket.io** - WebSocket
+- **JWT** - Authentication
+- **Google Gemini** - AI features
+- **Alpaca API** - Stock trading
+- **Teller API** - Banking integration
 
 ## 📚 Documentation
 
 - [Teller API Docs](https://teller.io/docs)
-- [OpenAI API Docs](https://platform.openai.com/docs)
+- [Google Gemini API Docs](https://ai.google.dev/docs)
+- [Alpaca API Docs](https://alpaca.markets/docs)
 - [Prisma Docs](https://www.prisma.io/docs)
 - [Socket.io Docs](https://socket.io/docs)
+- [React Docs](https://react.dev)
+- [TailwindCSS Docs](https://tailwindcss.com/docs)
+
+## 🎯 Key Features Showcase
+
+### AI Financial Advisor (Michael)
+The chatbot has access to your complete financial data and can:
+- Answer questions about spending patterns
+- Provide budget recommendations
+- Analyze investment performance
+- Suggest financial improvements
+- Perform comprehensive health checks
+
+### Meridian Dashboard
+Premium features include:
+- **Financial Health Score** - Multi-dimensional scoring system
+- **Cash Flow Prediction** - ML-based forecasting
+- **Debt Payoff Planner** - Optimized repayment strategies
+- **Portfolio Rebalancing** - Automated alerts
+- **Retirement Planning** - Long-term financial projections
+
+### Live Trading
+- Real-time stock quotes
+- Paper trading with Alpaca
+- AI-powered price predictions
+- Portfolio tracking and analytics
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the ISC License.
 
 ## 🎉 You're All Set!
 
-Your Finance Buddy backend is ready to go! Start the development server and begin building your financial management app.
+Your Meridian platform is ready to go! Start both servers and explore the comprehensive financial management features.
 
-For questions or issues, check the documentation links above.
+For questions or issues, check the documentation links above or open an issue on GitHub.
