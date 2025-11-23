@@ -1,13 +1,17 @@
-const axios = require('axios');
+import axios from 'axios';
 
 class MarketDataService {
+    private fmpApiKey: string;
+    private newsApiKey: string;
+    private fmpBaseUrl: string;
+
     constructor() {
-        this.fmpApiKey = process.env.FMP_API_KEY;
-        this.newsApiKey = process.env.NEWS_API_KEY;
+        this.fmpApiKey = process.env.FMP_API_KEY || '';
+        this.newsApiKey = process.env.NEWS_API_KEY || '';
         this.fmpBaseUrl = 'https://financialmodelingprep.com/api/v3';
     }
 
-    async getStockQuote(symbol) {
+    async getStockQuote(symbol: string) {
         try {
             const response = await axios.get(
                 `${this.fmpBaseUrl}/quote/${symbol}?apikey=${this.fmpApiKey}`
@@ -19,7 +23,7 @@ class MarketDataService {
         }
     }
 
-    async getCompanyProfile(symbol) {
+    async getCompanyProfile(symbol: string) {
         try {
             const response = await axios.get(
                 `${this.fmpBaseUrl}/profile/${symbol}?apikey=${this.fmpApiKey}`
@@ -31,7 +35,7 @@ class MarketDataService {
         }
     }
 
-    async getStockNews(symbol, limit = 10) {
+    async getStockNews(symbol: string, limit = 10) {
         try {
             const response = await axios.get(
                 `${this.fmpBaseUrl}/stock_news?tickers=${symbol}&limit=${limit}&apikey=${this.fmpApiKey}`
@@ -72,7 +76,7 @@ class MarketDataService {
         }
     }
 
-    async searchStocks(query) {
+    async searchStocks(query: string) {
         try {
             const response = await axios.get(
                 `${this.fmpBaseUrl}/search?query=${query}&limit=10&apikey=${this.fmpApiKey}`
@@ -85,4 +89,4 @@ class MarketDataService {
     }
 }
 
-module.exports = new MarketDataService();
+export default new MarketDataService();

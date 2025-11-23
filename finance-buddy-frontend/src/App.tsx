@@ -13,7 +13,7 @@ import TestTellerPage from './pages/TestTellerPage';
 import FinancialOverviewPage from './pages/dashboard/FinancialOverviewPage';
 import AccountsPage from './pages/dashboard/AccountsPage';
 import BankerPage from './pages/dashboard/BankerPage';
-import PortfolioPage from './pages/dashboard/PortfolioPage';
+import AdvancedPortfolioPage from './pages/dashboard/AdvancedPortfolioPage';
 import SettingsPage from './pages/dashboard/SettingsPage';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -45,7 +45,7 @@ function App() {
           <Route path="overview" element={<FinancialOverviewPage />} />
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="banker" element={<BankerPage />} />
-          <Route path="portfolio" element={<PortfolioPage />} />
+          <Route path="portfolio" element={<AdvancedPortfolioPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>

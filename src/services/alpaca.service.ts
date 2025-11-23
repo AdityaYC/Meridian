@@ -1,6 +1,8 @@
-const Alpaca = require('@alpacahq/alpaca-trade-api');
+import Alpaca from '@alpacahq/alpaca-trade-api';
 
 class AlpacaService {
+    private alpaca: any;
+
     constructor() {
         this.alpaca = new Alpaca({
             keyId: process.env.ALPACA_API_KEY,
@@ -27,7 +29,7 @@ class AlpacaService {
         }
     }
 
-    async getPosition(symbol) {
+    async getPosition(symbol: string) {
         try {
             return await this.alpaca.getPosition(symbol);
         } catch (error) {
@@ -36,7 +38,7 @@ class AlpacaService {
         }
     }
 
-    async placeOrder({ symbol, qty, side, type = 'market', timeInForce = 'day' }) {
+    async placeOrder({ symbol, qty, side, type = 'market', timeInForce = 'day' }: { symbol: string, qty: number, side: string, type?: string, timeInForce?: string }) {
         try {
             return await this.alpaca.createOrder({
                 symbol,
@@ -51,7 +53,7 @@ class AlpacaService {
         }
     }
 
-    async getOrders(params = {}) {
+    async getOrders(params: any = {}) {
         try {
             return await this.alpaca.getOrders(params);
         } catch (error) {
@@ -60,7 +62,7 @@ class AlpacaService {
         }
     }
 
-    async getLatestQuote(symbol) {
+    async getLatestQuote(symbol: string) {
         try {
             const quote = await this.alpaca.getLatestTrade(symbol);
             return quote;
@@ -70,7 +72,7 @@ class AlpacaService {
         }
     }
 
-    async getBars(symbol, timeframe = '1Day', limit = 100) {
+    async getBars(symbol: string, timeframe = '1Day', limit = 100) {
         try {
             const bars = await this.alpaca.getBarsV2(symbol, {
                 timeframe,
@@ -89,4 +91,4 @@ class AlpacaService {
     }
 }
 
-module.exports = new AlpacaService();
+export default new AlpacaService();

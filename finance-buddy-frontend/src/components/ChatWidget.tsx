@@ -60,8 +60,12 @@ const ChatWidget: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const { data } = await api.post('/banker/chat', {
+            const { data } = await api.post('/chat/financial-assistant', {
                 message: input,
+                history: messages.map(m => ({
+                    role: m.role,
+                    content: m.content
+                }))
             });
 
             const assistantMessage: Message = {

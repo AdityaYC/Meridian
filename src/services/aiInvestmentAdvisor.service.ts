@@ -1,17 +1,20 @@
-const Anthropic = require('@anthropic-ai/sdk');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const marketDataService = require('./marketData.service');
+import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import marketDataService from './marketData.service';
 
 class AIInvestmentAdvisor {
+    private anthropic: any;
+    private genAI: any;
+
     constructor() {
         this.anthropic = new Anthropic({
-            apiKey: process.env.ANTHROPIC_API_KEY,
+            apiKey: process.env.ANTHROPIC_API_KEY || '',
         });
 
-        this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     }
 
-    async analyzePortfolio(userId, holdings, userProfile) {
+    async analyzePortfolio(userId: string, holdings: any[], userProfile: any) {
         try {
             const totalValue = holdings.reduce((sum, h) => sum + (parseFloat(h.totalValue) || 0), 0);
             const portfolioBreakdown = this.calculatePortfolioBreakdown(holdings);
@@ -31,10 +34,10 @@ Holdings:
 ${holdings.map(h => `- ${h.symbol}: ${h.quantity} shares at $${h.currentPrice}, Value: $${h.totalValue}, Gain/Loss: ${h.gainLossPercent}%`).join('\n')}
 
 Sector Allocation:
-${Object.entries(portfolioBreakdown.sectors).map(([sector, pct]) => `- ${sector}: ${pct.toFixed(1)}%`).join('\n')}
+${Object.entries(portfolioBreakdown.sectors).map(([sector, pct]: [string, any]) => `- ${sector}: ${pct.toFixed(1)}%`).join('\n')}
 
 Asset Type Allocation:
-${Object.entries(portfolioBreakdown.assetTypes).map(([type, pct]) => `- ${type}: ${pct.toFixed(1)}%`).join('\n')}
+${Object.entries(portfolioBreakdown.assetTypes).map(([type, pct]: [string, any]) => `- ${type}: ${pct.toFixed(1)}%`).join('\n')}
 
 TASK:
 1. Analyze the portfolio's diversification
@@ -72,7 +75,7 @@ Format your response as JSON (no markdown):
             });
 
             const analysis = JSON.parse(
-                response.content[0].text.replace(/```json\n?|\n?```/g, '')
+                (response.content[0] as any).text.replace(/```json\n?|\n?```/g, '')
             );
 
             return analysis;
@@ -82,7 +85,7 @@ Format your response as JSON (no markdown):
         }
     }
 
-    async getInvestmentSuggestions(userProfile, availableCapital) {
+    async getInvestmentSuggestions(userProfile: any, availableCapital: number) {
         try {
             // Get market data
             const [sectors, topStocks] = await Promise.all([
@@ -99,7 +102,7 @@ USER PROFILE:
 - Time Horizon: ${userProfile.timeHorizon || 'Long-term'}
 
 MARKET CONTEXT:
-Top Performing Sectors: ${sectors.slice(0, 3).map(s => `${s.sector} (+${s.changesPercentage}%)`).join(', ')}
+Top Performing Sectors: ${(sectors as any[]).slice(0, 3).map(s => `${s.sector} (+${s.changesPercentage}%)`).join(', ')}
 
 TASK:
 Provide 5-8 specific investment recommendations across different categories:
@@ -143,7 +146,7 @@ For each recommendation, provide specific details. Format as JSON (no markdown):
             });
 
             const suggestions = JSON.parse(
-                response.content[0].text.replace(/```json\n?|\n?```/g, '')
+                (response.content[0] as any).text.replace(/```json\n?|\n?```/g, '')
             );
 
             return suggestions;
@@ -153,7 +156,7 @@ For each recommendation, provide specific details. Format as JSON (no markdown):
         }
     }
 
-    async analyzeStock(symbol) {
+    async analyzeStock(symbol: string) {
         try {
             const [quote, profile, news] = await Promise.all([
                 marketDataService.getStockQuote(symbol),
@@ -163,17 +166,17 @@ For each recommendation, provide specific details. Format as JSON (no markdown):
 
             const prompt = `Analyze this stock and provide investment recommendation:
 
-STOCK: ${symbol} - ${profile.companyName}
-Sector: ${profile.sector}
-Industry: ${profile.industry}
-Price: $${quote.price}
-52-Week Range: $${quote.yearLow} - $${quote.yearHigh}
-Market Cap: $${(profile.mktCap / 1e9).toFixed(2)}B
-P/E Ratio: ${quote.pe}
-EPS: ${quote.eps}
+STOCK: ${symbol} - ${(profile as any).companyName}
+Sector: ${(profile as any).sector}
+Industry: ${(profile as any).industry}
+Price: $${(quote as any).price}
+52-Week Range: $${(quote as any).yearLow} - $${(quote as any).yearHigh}
+Market Cap: $${((profile as any).mktCap / 1e9).toFixed(2)}B
+P/E Ratio: ${(quote as any).pe}
+EPS: ${(quote as any).eps}
 
 Recent News:
-${news.map(n => `- ${n.title}`).join('\n')}
+${(news as any[]).map(n => `- ${n.title}`).join('\n')}
 
 Provide analysis in JSON (no markdown):
 {
@@ -205,11 +208,11 @@ Provide analysis in JSON (no markdown):
         }
     }
 
-    calculatePortfolioBreakdown(holdings) {
+    calculatePortfolioBreakdown(holdings: any[]) {
         const totalValue = holdings.reduce((sum, h) => sum + (parseFloat(h.totalValue) || 0), 0);
 
-        const sectors = {};
-        const assetTypes = {};
+        const sectors: any = {};
+        const assetTypes: any = {};
 
         holdings.forEach(holding => {
             const value = parseFloat(holding.totalValue) || 0;
@@ -228,4 +231,4 @@ Provide analysis in JSON (no markdown):
     }
 }
 
-module.exports = new AIInvestmentAdvisor();
+export default new AIInvestmentAdvisor();

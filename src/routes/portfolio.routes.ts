@@ -1,12 +1,149 @@
 import { Router, Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { PrismaClient } from '@prisma/client';
-const alpacaService = require('../services/alpaca.service');
-const marketDataService = require('../services/marketData.service');
-const aiInvestmentAdvisor = require('../services/aiInvestmentAdvisor.service');
+import prisma from '../config/database';
+import alpacaService from '../services/alpaca.service';
+import marketDataService from '../services/marketData.service';
+import aiInvestmentAdvisor from '../services/aiInvestmentAdvisor.service';
+import insiderTradingService from '../services/insiderTrading.service';
+import cryptoService from '../services/crypto.service';
+import predictionService from '../services/prediction.service';
 
 const router = Router();
-const prisma = new PrismaClient();
+
+// Get category recommendations
+router.post('/recommendations/:category', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { category } = req.params;
+    const { riskTolerance, investmentAmount } = req.body;
+
+    const recommendations = await predictionService.getCategoryRecommendations(
+      category,
+      riskTolerance,
+      investmentAmount
+    );
+
+    res.json(recommendations);
+  } catch (error) {
+    console.error('Category recommendations error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get stock prediction
+router.get('/predict/:symbol', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { symbol } = req.params;
+    const { horizon = '1month' } = req.query;
+
+    const prediction = await predictionService.predictStockPrice(symbol, horizon as string);
+
+    // Save prediction
+    await prisma.stockPrediction.create({
+      data: {
+        symbol,
+        predictionDate: new Date(),
+        predictedPrice: prediction.predictedPrice,
+        confidenceScore: prediction.confidence / 100,
+        predictionHorizon: horizon as string,
+        technicalIndicators: prediction.technicalIndicators,
+        aiAnalysis: prediction.recommendation,
+      }
+    });
+
+    res.json(prediction);
+  } catch (error) {
+    console.error('Predict error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get insider trading analysis
+router.get('/insider/:symbol', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { symbol } = req.params;
+    const analysis = await insiderTradingService.analyzeInsiderActivity(symbol);
+    res.json(analysis);
+  } catch (error) {
+    console.error('Insider trading error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get crypto data
+router.get('/crypto/top', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { limit = 50 } = req.query;
+    const cryptos = await cryptoService.getTopCryptos(Number(limit));
+    res.json(cryptos);
+  } catch (error) {
+    console.error('Get top cryptos error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+router.get('/crypto/:symbol', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { symbol } = req.params;
+    const details = await cryptoService.getCryptoDetails(symbol);
+    res.json(details);
+  } catch (error) {
+    console.error('Get crypto details error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Save/update investment preferences
+router.post('/preferences/:category', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.userId;
+    const { category } = req.params;
+    const { riskTolerance, investmentAmount, timeHorizon, goals } = req.body;
+
+    // @ts-ignore
+    await prisma.investmentPreference.upsert({
+      where: {
+        userId_category: {
+          userId,
+          category
+        }
+      },
+      update: {
+        riskTolerance,
+        investmentAmount,
+        timeHorizon,
+        goals,
+        updatedAt: new Date()
+      },
+      create: {
+        userId,
+        category,
+        riskTolerance,
+        investmentAmount,
+        timeHorizon,
+        goals
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Save preferences error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+// Get user preferences
+router.get('/preferences', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.userId;
+    const preferences = await prisma.investmentPreference.findMany({
+      where: { userId }
+    });
+    res.json(preferences);
+  } catch (error) {
+    console.error('Get preferences error:', error);
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
 
 // Get user's portfolio holdings
 router.get('/holdings', authMiddleware, async (req: Request, res: Response) => {
@@ -97,7 +234,7 @@ router.post('/analyze', authMiddleware, async (req: Request, res: Response) => {
 
         // Save recommendations to database
         for (const rec of analysis.recommendations) {
-            await prisma.aIRecommendation.create({
+            await prisma.aiRecommendation.create({
                 data: {
                     userId,
                     recommendationType: rec.action,

@@ -49,8 +49,9 @@ import budgetRoutes from './routes/budget.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import bankerRoutes from './routes/banker.routes';
 import agentRoutes from './routes/agent.routes';
-// import portfolioRoutes from './routes/portfolio.routes'; // Temporarily disabled due to TS errors
-// import chatRoutes from './routes/chat.routes'; // Temporarily disabled due to TS errors
+import aiInsightsRoutes from './routes/ai-insights.routes';
+import portfolioRoutes from './routes/portfolio.routes';
+import chatRoutes from './routes/chat.routes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/teller', tellerRoutes);
@@ -63,8 +64,9 @@ app.use('/api/budgets', budgetRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/banker', bankerRoutes);
 app.use('/api/agent', agentRoutes);
-// app.use('/api/portfolio', portfolioRoutes); // Temporarily disabled
-// app.use('/api/chat', chatRoutes); // Temporarily disabled
+app.use('/api/ai-insights', aiInsightsRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

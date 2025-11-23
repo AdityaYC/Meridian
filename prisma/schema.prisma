@@ -21,6 +21,10 @@ model User {
   transactions  Transaction[]
   budgets       Budget[]
   investments   Investment[]
+  portfolioTransactions PortfolioTransaction[]
+  aiRecommendations AiRecommendation[]
+  investmentPreferences InvestmentPreference[]
+  cryptoHoldings CryptoHolding[]
   chatHistory   ChatMessage[]
   alerts        Alert[]
   tellerEnrollments TellerEnrollment[]
@@ -135,12 +139,16 @@ model Investment {
   symbol          String
   name            String
   type            String
+  sector          String?
   quantity        Float
   purchasePrice   Float
   currentPrice    Float
   totalValue      Float
   gainLoss        Float
   gainLossPercent Float
+  riskLevel       String?  @default("medium")
+  investmentGoal  String?
+  targetAllocation Float?
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -179,4 +187,101 @@ model ChatMessage {
   createdAt       DateTime @default(now())
   
   @@index([userId, createdAt])
+}
+
+model PortfolioTransaction {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  symbol          String
+  transactionType String
+  shares          Float
+  price           Float
+  totalAmount     Float
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+}
+
+model AiRecommendation {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  recommendationType String
+  symbol             String
+  reasoning          String
+  confidenceScore    Float
+  riskLevel          String
+  
+  createdAt          DateTime @default(now())
+  
+  @@index([userId])
+}
+
+model InsiderTrading {
+  id                 String   @id @default(uuid())
+  symbol             String
+  filingDate         DateTime
+  transactionDate    DateTime?
+  insiderName        String
+  insiderTitle       String?
+  transactionType    String
+  shares             Float
+  price              Float?
+  value              Float?
+  sharesOwnedAfter   Float?
+  isSignificant      Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  @@index([symbol])
+  @@index([filingDate(sort: Desc)])
+}
+
+model StockPrediction {
+  id                 String   @id @default(uuid())
+  symbol             String
+  predictionDate     DateTime
+  predictedPrice     Float
+  confidenceScore    Float?
+  predictionHorizon  String?
+  technicalIndicators Json?
+  aiAnalysis         String?
+  createdAt          DateTime @default(now())
+
+  @@index([symbol])
+}
+
+model InvestmentPreference {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         String
+  riskTolerance    Float
+  investmentAmount Float
+  timeHorizon      String?
+  goals            Json?
+  updatedAt        DateTime @default(now())
+
+  @@unique([userId, category])
+  @@index([userId])
+}
+
+model CryptoHolding {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol           String
+  amount           Float
+  avgCost          Float
+  currentPrice     Float?
+  marketValue      Float?
+  totalGainLoss    Float?
+  gainLossPercent  Float?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now())
+
+  @@index([userId])
 }

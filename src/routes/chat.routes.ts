@@ -1,14 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { PrismaClient } from '@prisma/client';
-import Anthropic from '@anthropic-ai/sdk';
+import prisma from '../config/database';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = Router();
-const prisma = new PrismaClient();
 
-const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Financial assistant chat endpoint
 router.post('/financial-assistant', authMiddleware, async (req: Request, res: Response) => {
@@ -29,25 +27,25 @@ router.post('/financial-assistant', authMiddleware, async (req: Request, res: Re
         ]);
 
         // Calculate financial summary
-        const totalBalance = bankAccounts.reduce((sum: number, acc: any) => sum + parseFloat(acc.balance || '0'), 0);
-        const totalInvestments = investments.reduce((sum: number, inv: any) => sum + parseFloat(inv.totalValue || '0'), 0);
+        const totalBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (acc.current || 0), 0);
+        const totalInvestments = investments.reduce((sum: number, inv: any) => sum + (inv.totalValue || 0), 0);
 
         const last30Days = new Date();
         last30Days.setDate(last30Days.getDate() - 30);
         const recentTransactions = transactions.filter((t: any) => new Date(t.date) >= last30Days);
         const monthlySpending = recentTransactions
-            .filter((t: any) => parseFloat(t.amount) < 0)
-            .reduce((sum: number, t: any) => sum + Math.abs(parseFloat(t.amount)), 0);
+            .filter((t: any) => t.amount < 0)
+            .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
         const monthlyIncome = recentTransactions
-            .filter((t: any) => parseFloat(t.amount) > 0)
-            .reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0);
+            .filter((t: any) => t.amount > 0)
+            .reduce((sum: number, t: any) => sum + t.amount, 0);
 
         // Group transactions by category
         const spendingByCategory: Record<string, number> = {};
         recentTransactions.forEach((t: any) => {
-            if (parseFloat(t.amount) < 0) {
+            if (t.amount < 0) {
                 const category = t.category || 'Uncategorized';
-                spendingByCategory[category] = (spendingByCategory[category] || 0) + Math.abs(parseFloat(t.amount));
+                spendingByCategory[category] = (spendingByCategory[category] || 0) + Math.abs(t.amount);
             }
         });
 
@@ -57,7 +55,7 @@ router.post('/financial-assistant', authMiddleware, async (req: Request, res: Re
 FINANCIAL DATA:
 - Total Account Balance: $${totalBalance.toFixed(2)}
 - Total Investments: $${totalInvestments.toFixed(2)}
-- Accounts: ${bankAccounts.length} accounts (${bankAccounts.map((a: any) => `${a.name}: $${a.balance}`).join(', ')})
+- Accounts: ${bankAccounts.length} accounts (${bankAccounts.map((a: any) => `${a.accountName}: $${a.current}`).join(', ')})
 - Monthly Income (last 30 days): $${monthlyIncome.toFixed(2)}
 - Monthly Spending (last 30 days): $${monthlySpending.toFixed(2)}
 - Net Savings: $${(monthlyIncome - monthlySpending).toFixed(2)}
@@ -80,27 +78,25 @@ Answer the user's question based on this data. Be helpful, concise, and actionab
 User question: ${message}`;
 
         // Build conversation history
-        const messages = [
-            ...(history || []).map((h: any) => ({
-                role: h.role,
-                content: h.content,
-            })),
-            {
-                role: 'user',
-                content: context,
-            },
-        ];
+        // Filter out empty history and ensure proper role mapping
+        const validHistory = (history || [])
+            .filter((h: any) => h.role && h.content)
+            .map((h: any) => ({
+                role: h.role === 'assistant' ? 'model' : 'user',
+                parts: [{ text: h.content }],
+            }));
 
-        // Get AI response
-        const response = await anthropic.messages.create({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 1024,
-            messages: messages as any,
+        // Ensure the first message is from the user (Gemini requirement)
+        if (validHistory.length > 0 && validHistory[0].role === 'model') {
+            validHistory.shift();
+        }
+
+        const chat = model.startChat({
+            history: validHistory,
         });
 
-        const aiResponse = response.content[0].type === 'text'
-            ? response.content[0].text
-            : 'I apologize, I could not generate a response.';
+        const result = await chat.sendMessage(context);
+        const aiResponse = result.response.text();
 
         res.json({ response: aiResponse });
     } catch (error) {
