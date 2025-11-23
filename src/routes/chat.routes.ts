@@ -18,7 +18,7 @@ router.post('/financial-assistant', authMiddleware, async (req: Request, res: Re
         // Debug API key (safe log)
         const apiKey = process.env.GEMINI_API_KEY;
         console.log('API Key status:', apiKey ? `Present (starts with ${apiKey.substring(0, 4)}...)` : 'Missing');
-        console.log('Model:', "gemini-1.5-flash");
+        console.log('Model:', "gemini-pro");
 
         // Fetch user's financial data
         console.log('Fetching user context...');
