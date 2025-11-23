@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     ArrowLeftRight,
+    TrendingUp,
     Settings,
     Bell,
     Search,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useThemeStore } from '../../store/themeStore';
+import ChatWidget from '../ChatWidget';
 
 const DashboardLayout: React.FC = () => {
     const navigate = useNavigate();
@@ -67,6 +69,13 @@ const DashboardLayout: React.FC = () => {
                             path="/dashboard/overview"
                             active={location.pathname === '/dashboard/overview'}
                             onClick={() => navigate('/dashboard/overview')}
+                        />
+                        <NavItem
+                            icon={<TrendingUp className="w-5 h-5" />}
+                            label="Portfolio"
+                            path="/dashboard/portfolio"
+                            active={location.pathname === '/dashboard/portfolio'}
+                            onClick={() => navigate('/dashboard/portfolio')}
                         />
                         <NavItem
                             icon={<Users className="w-5 h-5" />}
@@ -193,6 +202,9 @@ const DashboardLayout: React.FC = () => {
                     className="fixed inset-0 bg-black/50 z-40 lg:hidden"
                 />
             )}
+
+            {/* Chat Widget */}
+            <ChatWidget />
         </div>
     );
 };

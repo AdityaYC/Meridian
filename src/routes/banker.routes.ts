@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getBankerContext, processBankerQuery, createConversation, endConversation, getPersona, generateVideo, getVideoStatus } from '../controllers/banker.controller';
+import { getBankerContext, processBankerQuery, chatWithMichael, createConversation, endConversation, getPersona, generateVideo, getVideoStatus } from '../controllers/banker.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -22,5 +22,8 @@ router.post('/conversation/end', authMiddleware, endConversation);
 
 // Process banker query (called by Tavus)
 router.post('/query', authMiddleware, processBankerQuery);
+
+// Text chat with Michael
+router.post('/chat', authMiddleware, chatWithMichael);
 
 export default router;
