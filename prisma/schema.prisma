@@ -22,7 +22,7 @@ model User {
   budgets       Budget[]
   investments   Investment[]
   portfolioTransactions PortfolioTransaction[]
-  aiRecommendations AiRecommendation[]
+  aiRecommendations AIRecommendation[]
   investmentPreferences InvestmentPreference[]
   cryptoHoldings CryptoHolding[]
   chatHistory   ChatMessage[]
@@ -156,6 +156,37 @@ model Investment {
   @@index([userId])
 }
 
+model AIRecommendation {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendationType String
+  symbol             String?
+  reasoning          String   @db.Text
+  confidenceScore    Float?
+  targetPrice        Float?
+  riskLevel          String?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+
+  @@index([userId, isActive])
+}
+
+model PortfolioTransaction {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol           String
+  transactionType  String
+  shares           Float
+  price            Float
+  totalAmount      Float
+  transactionDate  DateTime @default(now())
+
+  @@index([userId])
+  @@index([symbol])
+}
+
 model Alert {
   id              String   @id @default(uuid())
   userId          String
@@ -187,38 +218,6 @@ model ChatMessage {
   createdAt       DateTime @default(now())
   
   @@index([userId, createdAt])
-}
-
-model PortfolioTransaction {
-  id              String   @id @default(uuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  symbol          String
-  transactionType String
-  shares          Float
-  price           Float
-  totalAmount     Float
-  
-  createdAt       DateTime @default(now())
-  
-  @@index([userId])
-}
-
-model AiRecommendation {
-  id                 String   @id @default(uuid())
-  userId             String
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  recommendationType String
-  symbol             String
-  reasoning          String
-  confidenceScore    Float
-  riskLevel          String
-  
-  createdAt          DateTime @default(now())
-  
-  @@index([userId])
 }
 
 model InsiderTrading {

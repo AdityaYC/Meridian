@@ -3,8 +3,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import marketDataService from './marketData.service';
 
 class AIInvestmentAdvisor {
-    private anthropic: any;
-    private genAI: any;
+    private anthropic: Anthropic;
+    private genAI: GoogleGenerativeAI;
 
     constructor() {
         this.anthropic = new Anthropic({
@@ -69,16 +69,19 @@ Format your response as JSON (no markdown):
 }`;
 
             const response = await this.anthropic.messages.create({
-                model: 'claude-sonnet-4-20250514',
+                model: 'claude-3-sonnet-20240229',
                 max_tokens: 2000,
                 messages: [{ role: 'user', content: prompt }],
             });
 
-            const analysis = JSON.parse(
-                (response.content[0] as any).text.replace(/```json\n?|\n?```/g, '')
-            );
-
-            return analysis;
+            const content = response.content[0];
+            if ('text' in content) {
+                const analysis = JSON.parse(
+                    content.text.replace(/```json\n?|\n?```/g, '')
+                );
+                return analysis;
+            }
+            throw new Error('Unexpected response format from Anthropic');
         } catch (error) {
             console.error('AI portfolio analysis error:', error);
             throw error;
@@ -102,7 +105,7 @@ USER PROFILE:
 - Time Horizon: ${userProfile.timeHorizon || 'Long-term'}
 
 MARKET CONTEXT:
-Top Performing Sectors: ${(sectors as any[]).slice(0, 3).map(s => `${s.sector} (+${s.changesPercentage}%)`).join(', ')}
+Top Performing Sectors: ${sectors.slice(0, 3).map((s: any) => `${s.sector} (+${s.changesPercentage}%)`).join(', ')}
 
 TASK:
 Provide 5-8 specific investment recommendations across different categories:
@@ -140,16 +143,19 @@ For each recommendation, provide specific details. Format as JSON (no markdown):
 }`;
 
             const response = await this.anthropic.messages.create({
-                model: 'claude-sonnet-4-20250514',
+                model: 'claude-3-sonnet-20240229',
                 max_tokens: 3000,
                 messages: [{ role: 'user', content: prompt }],
             });
 
-            const suggestions = JSON.parse(
-                (response.content[0] as any).text.replace(/```json\n?|\n?```/g, '')
-            );
-
-            return suggestions;
+            const content = response.content[0];
+            if ('text' in content) {
+                const suggestions = JSON.parse(
+                    content.text.replace(/```json\n?|\n?```/g, '')
+                );
+                return suggestions;
+            }
+            throw new Error('Unexpected response format from Anthropic');
         } catch (error) {
             console.error('AI investment suggestions error:', error);
             throw error;
@@ -176,7 +182,7 @@ P/E Ratio: ${(quote as any).pe}
 EPS: ${(quote as any).eps}
 
 Recent News:
-${(news as any[]).map(n => `- ${n.title}`).join('\n')}
+${news.map((n: any) => `- ${n.title}`).join('\n')}
 
 Provide analysis in JSON (no markdown):
 {
@@ -211,8 +217,8 @@ Provide analysis in JSON (no markdown):
     calculatePortfolioBreakdown(holdings: any[]) {
         const totalValue = holdings.reduce((sum, h) => sum + (parseFloat(h.totalValue) || 0), 0);
 
-        const sectors: any = {};
-        const assetTypes: any = {};
+        const sectors: Record<string, number> = {};
+        const assetTypes: Record<string, number> = {};
 
         holdings.forEach(holding => {
             const value = parseFloat(holding.totalValue) || 0;
@@ -224,7 +230,9 @@ Provide analysis in JSON (no markdown):
             }
 
             // By asset type
-            assetTypes[holding.type] = (assetTypes[holding.type] || 0) + percentage;
+            if (holding.type) {
+                assetTypes[holding.type] = (assetTypes[holding.type] || 0) + percentage;
+            }
         });
 
         return { sectors, assetTypes };

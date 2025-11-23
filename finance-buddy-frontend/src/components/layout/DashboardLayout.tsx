@@ -17,6 +17,7 @@ import {
     Sun,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import logo from '../../assets/meridian-logo.jpg';
 import { useThemeStore } from '../../store/themeStore';
 import ChatWidget from '../ChatWidget';
 
@@ -43,7 +44,7 @@ const DashboardLayout: React.FC = () => {
                 <div className="flex flex-col h-full">
                     {/* Logo */}
                     <div className="h-16 flex items-center gap-3 px-6 border-b border-gray-200 dark:border-gray-700">
-                        <div className="w-8 h-8 bg-primary-600 rounded-lg" />
+                        <img src={logo} alt="Meridian Logo" className="w-8 h-8 rounded-lg object-cover" />
                         <span className="text-xl font-semibold text-gray-900 dark:text-white">Meridian</span>
                     </div>
 

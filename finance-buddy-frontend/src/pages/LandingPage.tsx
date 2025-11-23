@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Shield, Zap, TrendingUp, Users, CheckCircle } from 'lucide-react';
+import logo from '../assets/meridian-logo.jpg';
 
 const LandingPage: React.FC = () => {
     const navigate = useNavigate();
@@ -12,8 +13,8 @@ const LandingPage: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-primary-600 rounded-lg" />
-                            <span className="text-xl font-semibold text-gray-900">Finance Buddy</span>
+                            <img src={logo} alt="Meridian Logo" className="w-8 h-8 rounded-lg object-cover" />
+                            <span className="text-xl font-semibold text-gray-900">Meridian</span>
                         </div>
 
                         <div className="hidden md:flex items-center gap-8">
@@ -205,8 +206,8 @@ const LandingPage: React.FC = () => {
                     <div className="grid md:grid-cols-4 gap-8">
                         <div>
                             <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 bg-primary-600 rounded-lg" />
-                                <span className="font-semibold text-gray-900">Finance Buddy</span>
+                                <img src={logo} alt="Meridian Logo" className="w-8 h-8 rounded-lg object-cover" />
+                                <span className="font-semibold text-gray-900">Meridian</span>
                             </div>
                             <p className="text-sm text-gray-600">
                                 Your personal AI financial assistant.
@@ -242,7 +243,7 @@ const LandingPage: React.FC = () => {
                     </div>
 
                     <div className="border-t border-gray-200 mt-12 pt-8 text-center text-sm text-gray-600">
-                        © 2025 Finance Buddy. All rights reserved.
+                        © 2025 Meridian. All rights reserved.
                     </div>
                 </div>
             </footer>

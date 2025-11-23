@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { authAPI } from '../lib/api';
 import { useAuthStore } from '../store/authStore';
+import logo from '../assets/meridian-logo.jpg';
 import toast from 'react-hot-toast';
 
 const RegisterPage: React.FC = () => {
@@ -51,7 +52,7 @@ const RegisterPage: React.FC = () => {
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex w-12 h-12 bg-primary-600 rounded-xl mb-4" />
+                        <img src={logo} alt="Meridian Logo" className="inline-block w-16 h-16 rounded-xl mb-4 object-cover" />
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">Create your account</h1>
                         <p className="text-gray-600">Start managing your finances better today</p>
                     </div>
