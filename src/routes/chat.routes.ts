@@ -6,7 +6,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const router = Router();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // Financial assistant chat endpoint
 router.post('/financial-assistant', authMiddleware, async (req: Request, res: Response) => {
@@ -18,7 +18,7 @@ router.post('/financial-assistant', authMiddleware, async (req: Request, res: Re
         // Debug API key (safe log)
         const apiKey = process.env.GEMINI_API_KEY;
         console.log('API Key status:', apiKey ? `Present (starts with ${apiKey.substring(0, 4)}...)` : 'Missing');
-        console.log('Model:', "gemini-1.5-flash");
+        console.log('Model:', "gemini-pro");
 
         // Fetch user's financial data
         console.log('Fetching user context...');
