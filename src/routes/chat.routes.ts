@@ -11,10 +11,17 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // Financial assistant chat endpoint
 router.post('/financial-assistant', authMiddleware, async (req: Request, res: Response) => {
     try {
+        console.log('Chat request received');
         const userId = (req as any).userId;
         const { message, history } = req.body;
+        
+        // Debug API key (safe log)
+        const apiKey = process.env.GEMINI_API_KEY;
+        console.log('API Key status:', apiKey ? `Present (starts with ${apiKey.substring(0, 4)}...)` : 'Missing');
+        console.log('Model:', "gemini-1.5-flash");
 
         // Fetch user's financial data
+        console.log('Fetching user context...');
         const [bankAccounts, transactions, budgets, investments] = await Promise.all([
             prisma.bankAccount.findMany({ where: { userId }, take: 50 }),
             prisma.transaction.findMany({
@@ -99,9 +106,15 @@ User question: ${message}`;
         const aiResponse = result.response.text();
 
         res.json({ response: aiResponse });
-    } catch (error) {
-        console.error('Chat error:', error);
-        res.status(500).json({ error: 'Failed to process chat message' });
+    } catch (error: any) {
+        console.error('Chat error details:', {
+            message: error.message,
+            status: error.status,
+            statusText: error.statusText,
+            details: error.errorDetails
+        });
+        console.error('Full error:', error);
+        res.status(500).json({ error: 'Failed to get response from AI' });
     }
 });
 
