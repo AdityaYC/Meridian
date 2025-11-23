@@ -132,13 +132,6 @@ const AdvancedPortfolioPage: React.FC = () => {
     }
   };
 
-  const saveApiKeys = () => {
-    localStorage.setItem('alphaVantageKey', apiKeys.alphaVantage);
-    localStorage.setItem('newsApiKey', apiKeys.newsApi);
-    setShowApiSettings(false);
-    toast.success('API Keys saved');
-  };
-
   const getRecommendations = async () => {
     try {
       setLoading(true);
@@ -245,12 +238,6 @@ const AdvancedPortfolioPage: React.FC = () => {
     } catch (error) {
       toast.error('Failed to get insider data');
     }
-  };
-
-  const getRiskColor = (risk: number) => {
-    if (risk < 0.35) return 'bg-green-500';
-    if (risk < 0.7) return 'bg-yellow-500';
-    return 'bg-red-500';
   };
 
   const getRiskLabel = (risk: number) => {

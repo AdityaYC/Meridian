@@ -95,7 +95,7 @@ router.get('/crypto/:symbol', authMiddleware, async (req: Request, res: Response
 // Save/update investment preferences
 router.post('/preferences/:category', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
     const { category } = req.params;
     const { riskTolerance, investmentAmount, timeHorizon, goals } = req.body;
 
@@ -134,7 +134,7 @@ router.post('/preferences/:category', authMiddleware, async (req: Request, res: 
 // Get user preferences
 router.get('/preferences', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
     const preferences = await prisma.investmentPreference.findMany({
       where: { userId }
     });
